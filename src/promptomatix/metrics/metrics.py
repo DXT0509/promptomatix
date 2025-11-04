@@ -66,12 +66,23 @@ class MetricsManager:
         """Helper method to get the output value from an item using the first output field"""
         if not MetricsManager._output_fields:
             return ''
-            # raise ValueError("MetricsManager not configured with output_fields")
         
         # For each output field, check if it is present in the given dict i.e. `item`
         # Collect all such existing fields and return a concatenated string
         fields = [field for field in MetricsManager._output_fields if field in item]
-        return ' '.join([str(getattr(item, field, '')).lower().strip() for field in fields])
+        
+        # Try both getattr (for objects) and dict access (for dicts)
+        result_parts = []
+        for field in fields:
+            if hasattr(item, field):
+                value = getattr(item, field, '')
+            elif isinstance(item, dict) and field in item:
+                value = item[field]
+            else:
+                value = ''
+            result_parts.append(str(value).lower().strip())
+        
+        return ' '.join(result_parts)
 
     @staticmethod
     def get_metrics_for_task(task_type: str) -> Callable:
@@ -497,19 +508,25 @@ class MetricsManager:
         Returns:
             float: Score between 0 and 1
         """
-        gold_text = MetricsManager._get_output_value(example)
-        pred_text = MetricsManager._get_output_value(pred)
+        try:
+            gold_text = MetricsManager._get_output_value(example)
+            pred_text = MetricsManager._get_output_value(pred)
 
-        fluent_ref = "This is a well-written, grammatically correct, and flowing text."
-        creative_ref = "This is a unique, novel, and imaginative piece of writing with original ideas."
-        
-        _, _, fluency = bert_score_metric([pred_text], [fluent_ref], lang='en', rescale_with_baseline=False)
-        _, _, creativity = bert_score_metric([pred_text], [creative_ref], lang='en', rescale_with_baseline=False)
-        _, _, similarity = bert_score_metric([pred_text], [gold_text], lang='en', rescale_with_baseline=False)
-   
-        combined_score = (fluency.mean().item() + creativity.mean().item() + similarity.mean().item()) / 3
+            if not gold_text or not pred_text:
+                return 0.0
 
-        return combined_score 
+            fluent_ref = "This is a well-written, grammatically correct, and flowing text."
+            creative_ref = "This is a unique, novel, and imaginative piece of writing with original ideas."
+            
+            _, _, fluency = bert_score_metric([pred_text], [fluent_ref], lang='en', rescale_with_baseline=False)
+            _, _, creativity = bert_score_metric([pred_text], [creative_ref], lang='en', rescale_with_baseline=False)
+            _, _, similarity = bert_score_metric([pred_text], [gold_text], lang='en', rescale_with_baseline=False)
+       
+            combined_score = (fluency.mean().item() + creativity.mean().item() + similarity.mean().item()) / 3
+
+            return combined_score
+        except Exception as e:
+            return 0.0 
 
     @staticmethod
     def _summarization_metrics_final_eval(example: Any, pred: Any, instructions: Any = None, trace: Any = None) -> float:

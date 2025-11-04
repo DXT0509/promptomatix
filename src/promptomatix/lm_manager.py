@@ -1,6 +1,30 @@
 from typing import Optional
 import dspy
 from dspy.backends import OpenAI, Anthropic, Cohere
+import litellm
+
+class OpenRouterLM:
+    def __init__(self, model, api_key, api_base=None, temperature=0.7, max_tokens=4000, **kwargs):
+        self.model = model
+        self.api_key = api_key
+        self.api_base = api_base or "https://openrouter.ai/api/v1"
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+        self.kwargs = kwargs
+
+    def __call__(self, prompt, **call_kwargs):
+        response = litellm.completion(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            api_base=self.api_base,
+            api_key=self.api_key,
+            custom_llm_provider="openrouter",
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+            **self.kwargs,
+            **call_kwargs
+        )
+        return response.choices[0].message.content
 
 class LMManager:
     """Manages Language Model initialization and configuration for different providers"""
@@ -9,7 +33,7 @@ class LMManager:
         'openai': OpenAI,
         'anthropic': Anthropic,
         'cohere': Cohere,
-        # Add more providers as needed
+        'openrouter': OpenRouterLM,  # Add OpenRouter support
     }
 
     @classmethod
@@ -61,6 +85,8 @@ class LMManager:
         # Add provider-specific configurations
         if provider == 'openai' and api_base:
             lm_args["api_base"] = api_base
+        if provider == 'openrouter' and api_base:
+            lm_args["api_base"] = api_base
             
         # Initialize the LM
         try:
@@ -71,4 +97,4 @@ class LMManager:
     @staticmethod
     def configure_dspy(lm) -> None:
         """Configure DSPy with the given language model"""
-        dspy.configure(lm=lm) 
+        dspy.configure(lm=lm)

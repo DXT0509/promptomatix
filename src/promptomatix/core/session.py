@@ -193,8 +193,17 @@ class SessionManager:
         return session
     
     def get_session(self, session_id: str) -> Optional[OptimizationSession]:
-        """Retrieve a session by ID."""
-        return self.sessions.get(session_id)
+        """Retrieve a session by ID, loading from file if not in memory."""
+        # Check memory cache first
+        if session_id in self.sessions:
+            return self.sessions[session_id]
+        
+        # Try to load from file
+        session_path = self.sessions_dir / f'{session_id}.json'
+        if session_path.exists():
+            return self.load_session_from_file(str(session_path))
+        
+        return None
     
     def update_session(self, session: OptimizationSession):
         """Update a session and persist changes."""

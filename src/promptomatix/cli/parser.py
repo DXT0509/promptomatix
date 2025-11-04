@@ -14,8 +14,8 @@ def parse_args() -> Dict:
     """
     parser = ArgumentParser(description="Prompt Optimization Tool")
     
-    # Basic configuration
-    input_source = parser.add_mutually_exclusive_group(required=True)
+    # Basic configuration (not required if using feedback operations)
+    input_source = parser.add_mutually_exclusive_group(required=False)
     input_source.add_argument("--raw_input", type=str, 
                             help="Initial human input for prompt optimization")
     input_source.add_argument("--huggingface_dataset_name", type=str, 
@@ -86,9 +86,31 @@ def parse_args() -> Dict:
     feedback_group.add_argument("--export_feedbacks", type=str, 
                               help="Export feedbacks to file")
     feedback_group.add_argument("--prompt_id", type=str, help="Filter by prompt ID")
+    feedback_group.add_argument("--session_id", type=str, 
+                              help="Session ID for feedback operations")
+    feedback_group.add_argument("--feedback", type=str, 
+                              help="Feedback text to save and optimize with")
+    feedback_group.add_argument("--optimize_with_feedback", action="store_true",
+                              help="Re-optimize using feedback for the given session_id")
     
     args = parser.parse_args()
-    return {k: v for k, v in vars(args).items() if v is not None} 
+    
+    # Validate that raw_input or huggingface_dataset_name is provided when not using feedback operations
+    parsed_dict = {k: v for k, v in vars(args).items() if v is not None}
+    
+    # Check if this is a feedback operation
+    is_feedback_operation = (
+        parsed_dict.get('optimize_with_feedback') or 
+        parsed_dict.get('list_feedbacks') or 
+        parsed_dict.get('analyze_feedbacks') or 
+        parsed_dict.get('export_feedbacks')
+    )
+    
+    # Require input source only if not a feedback operation
+    if not is_feedback_operation and not (parsed_dict.get('raw_input') or parsed_dict.get('huggingface_dataset_name')):
+        parser.error("one of the arguments --raw_input --huggingface_dataset_name is required (unless using feedback operations)")
+    
+    return parsed_dict 
 
 def main():
     """Main CLI entry point."""

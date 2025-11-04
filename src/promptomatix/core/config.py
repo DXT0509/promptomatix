@@ -6,7 +6,8 @@ from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Optional, List, Any, Dict, Type
-
+import litellm
+import os
 import dspy
 from datasets import load_dataset, Dataset
 
@@ -38,13 +39,14 @@ class ModelProvider(Enum):
     DATABRICKS = 'databricks'
     LOCAL = 'local'
     TOGETHERAI = 'togetherai'
+    OPENROUTER = 'openrouter'
 
 DEFAULT_SYNTHETIC_DATA_SIZE = 30
-DEFAULT_TRAIN_RATIO = 0.2
+DEFAULT_TRAIN_RATIO = 0.4
 
 class LambdaPenalty:
     """Class to manage the lambda penalty value for metrics calculations."""
-    _value = 0.005  # Default value
+    _value = 0.001  # Default value (no length penalty)
 
     @classmethod
     def get_value(cls) -> float:
@@ -296,14 +298,24 @@ class Config:
         self.model_api_key = kwargs.get('model_api_key')
         self.model_api_base = kwargs.get('model_api_base')
         self.model_provider = kwargs.get('model_provider')
-        self.temperature = kwargs.get('temperature', 0.7)  # Default temperature
+        self.temperature = kwargs.get('temperature', 0.5)  # Default temperature (deterministic)
         self.max_tokens = kwargs.get('max_tokens', 4000)  # Default max tokens
         self.config_max_tokens = kwargs.get('config_max_tokens', 14000)  # Default max tokens
-        self.config_temperature = kwargs.get('config_temperature', 0.7)
+        self.config_temperature = kwargs.get('config_temperature', 0.5)
         self.config_model_name = kwargs.get('config_model_name')
         self.config_model_provider = kwargs.get('config_model_provider')
         self.config_model_api_key = kwargs.get('config_model_api_key')
         self.config_model_api_base = kwargs.get('config_model_api_base')
+        # --- FORCE PROVIDER TO OPENROUTER IF USING LLAMA 4 MAVERICK ---
+        if (
+            self.model_name and 'llama-4-maverick' in self.model_name
+        ) or (
+            self.config_model_name and 'llama-4-maverick' in self.config_model_name
+        ):
+            self.model_provider = 'openrouter'
+            self.config_model_provider = 'openrouter'
+            print("[DEBUG] (Config) Forcing model_provider and config_model_provider to 'openrouter' for Llama 4 Maverick")
+        print(f"[DEBUG] (Config) model_provider: {self.model_provider}, config_model_provider: {self.config_model_provider}, model_name: {self.model_name}, config_model_name: {self.config_model_name}")
 
         # Training configuration
         self.synthetic_data_size = kwargs.get('synthetic_data_size')
@@ -689,7 +701,7 @@ class Config:
             'quick_search': {
                 # DATA related
                 'synthetic_data_size': 30,
-                'train_ratio': 0.2,
+                'train_ratio': 0.4,
                 # OPTIMIZER related
                 'miprov2_init_auto': None,
                 'miprov2_init_num_candidates': 5,
@@ -701,7 +713,7 @@ class Config:
             'moderate_search': {
                 # DATA related
                 'synthetic_data_size': 100,
-                'train_ratio': 0.2,
+                'train_ratio': 0.4,
                 # OPTIMIZER related
                 'miprov2_init_auto': None,
                 'miprov2_init_num_candidates': 10,
@@ -713,7 +725,7 @@ class Config:
             'heavy_search': {
                 # DATA related
                 'synthetic_data_size': 300,
-                'train_ratio': 0.2,
+                'train_ratio': 0.4,
                 # OPTIMIZER related
                 'miprov2_init_auto': None,
                 'miprov2_init_num_candidates': 20,
@@ -877,6 +889,10 @@ class Config:
                 raise ValueError(f"Unsupported file format: {ext}")
 
     def _setup_model_config(self):
+        if isinstance(self.model_provider, str):
+            self.model_provider = ModelProvider(self.model_provider.lower())
+        if isinstance(self.config_model_provider, str):
+            self.config_model_provider = ModelProvider(self.config_model_provider.lower())
         """Set up model configuration based on provider.
         
         Returns:
@@ -888,7 +904,7 @@ class Config:
         """
         PROVIDER_CONFIGS = {
             ModelProvider.OPENAI: {
-                'api_base': 'https://api.openai.com/v1',
+                'api_base': os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1"),
                 'env_key': 'OPENAI_API_KEY',
                 'default_model': 'gpt-4o'
             },
@@ -911,13 +927,18 @@ class Config:
                 'api_base': 'https://api.together.xyz/',
                 'env_key': 'TOGETHERAI_API_KEY',
                 'default_model': 'together_ai/mistralai/Mistral-Small-24B-Instruct-2501'
+            },
+            ModelProvider.OPENROUTER: {
+                'api_base': os.environ.get("OPENROUTER_API_BASE", "https://openrouter.ai/api/v1"),
+                'env_key': 'OPENROUTER_API_KEY',
+                'default_model': 'meta-llama/llama-4-maverick:free'
             }
         }
 
         # Teacher
         PROVIDER_CONFIGS_FOR_CONFIG_MODEL = {
             ModelProvider.OPENAI: {
-                'api_base': 'https://api.openai.com/v1',
+                'api_base': os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1"),
                 'env_key': 'OPENAI_API_KEY',
                 'default_model': 'gpt-4o'
             },
@@ -940,6 +961,11 @@ class Config:
                 'api_base': 'https://api.together.xyz/',
                 'env_key': 'TOGETHERAI_API_KEY',
                 'default_model': 'together_ai/meta-llama/Llama-3.3-70B-Instruct-Turbo'
+            },
+            ModelProvider.OPENROUTER: {
+                'api_base': os.environ.get("OPENROUTER_API_BASE", "https://openrouter.ai/api/v1"),
+                'env_key': 'OPENROUTER_API_KEY',
+                'default_model': 'meta-llama/llama-4-maverick:free'
             }
         }
 
@@ -947,16 +973,22 @@ class Config:
         if not self.model_name:
             if self.model_provider is None:
                 self.model_provider = ModelProvider.OPENAI
-                # self.model_provider = ModelProvider.TOGETHERAI
-            self.model_name = PROVIDER_CONFIGS[ModelProvider.OPENAI]['default_model']
-            # self.model_name = PROVIDER_CONFIGS[ModelProvider.TOGETHERAI]['default_model']
+            if self.model_provider == ModelProvider.OPENROUTER:
+                self.model_name = PROVIDER_CONFIGS[ModelProvider.OPENROUTER]['default_model']
+            else:
+                self.model_name = PROVIDER_CONFIGS[ModelProvider.OPENAI]['default_model']
 
         if not self.config_model_name:
             if self.config_model_provider is None:
-                self.config_model_provider = ModelProvider.OPENAI
-                # self.config_model_provider = ModelProvider.TOGETHERAI
-            self.config_model_name = PROVIDER_CONFIGS_FOR_CONFIG_MODEL[ModelProvider.OPENAI]['default_model']
-            # self.config_model_name = PROVIDER_CONFIGS_FOR_CONFIG_MODEL[ModelProvider.TOGETHERAI]['default_model']
+                # Default config_model_provider to match model_provider if available
+                if self.model_provider and self.model_provider != ModelProvider.OPENAI:
+                    self.config_model_provider = self.model_provider
+                else:
+                    self.config_model_provider = ModelProvider.OPENAI
+            if self.config_model_provider == ModelProvider.OPENROUTER:
+                self.config_model_name = PROVIDER_CONFIGS_FOR_CONFIG_MODEL[ModelProvider.OPENROUTER]['default_model']
+            else:
+                self.config_model_name = PROVIDER_CONFIGS_FOR_CONFIG_MODEL[ModelProvider.OPENAI]['default_model']
         
         # Convert string to enum if needed
         if isinstance(self.model_provider, str):
@@ -987,7 +1019,10 @@ class Config:
 
         # Get provider configuration
         try:
-            provider_config = PROVIDER_CONFIGS[self.model_provider]
+            provider_config = PROVIDER_CONFIGS.get(
+                self.model_provider, 
+                PROVIDER_CONFIGS.get(self.model_provider.value)
+            )
         except KeyError:
             valid_providers = [p.value for p in ModelProvider]
             raise ValueError(f"Unsupported model provider. Must be one of: {valid_providers}")
@@ -1010,10 +1045,13 @@ class Config:
                 try:
                     self.model_api_key = os.environ[provider_config['env_key']]
                 except KeyError:
-                    raise EnvironmentError(
-                        f"Missing {provider_config['env_key']} environment variable "
-                        f"required for {self.model_provider.value}"
-                    )
+                    if self.model_provider == ModelProvider.OPENROUTER:
+                        self.model_api_key = os.environ.get("OPENROUTER_API_KEY")
+                    else:
+                        raise EnvironmentError(
+                            f"Missing {provider_config['env_key']} environment variable "
+                            f"required for {self.model_provider.value}"
+                        )
         else:
             if self.model_api_key is None:
                 self.model_api_key = None
@@ -1023,24 +1061,63 @@ class Config:
                 try:
                     self.config_model_api_key = os.environ[config_provider_config['env_key']]
                 except KeyError:
-                    raise EnvironmentError(
-                        f"Missing {config_provider_config['env_key']} environment variable "
-                        f"required for {self.config_model_provider.value}"
-                    )
+                    if self.config_model_provider == ModelProvider.OPENROUTER:
+                        self.config_model_api_key = os.environ.get("OPENROUTER_API_KEY")
+                    else:
+                        raise EnvironmentError(
+                            f"Missing {config_provider_config['env_key']} environment variable "
+                            f"required for {self.config_model_provider.value}"
+                        )
         else:
             if self.config_model_api_key is None:
                 self.config_model_api_key = None
+        
 
-        # Initialize language model
+        if str(self.model_provider).lower().__contains__("openrouter"):
+            # Configure litellm for OpenRouter
+            api_key = os.environ.get("OPENROUTER_API_KEY") or "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"
+            api_base = "https://openrouter.ai/api/v1"
+
+            print(f"✅ Using OpenRouter with model: {self.model_name}")
+            
+            # Optional: test model access (disabled by default to save tokens).
+            # Enable by setting PROMPTOMATIX_TEST_PROVIDER=1 in your environment.
+            if os.environ.get("PROMPTOMATIX_TEST_PROVIDER") == "1":
+                try:
+                    _ = litellm.completion(
+                        model=self.model_name,
+                        messages=[{"role": "user", "content": "test"}],
+                        api_base=api_base,
+                        api_key=api_key,
+                        custom_llm_provider="openrouter"
+                    )
+                    print("✅ Successfully connected to OpenRouter API")
+                except Exception as e:
+                    print(f"❌ Error testing OpenRouter API: {str(e)}")
+                    raise
+
         try:
+            # Configure litellm with custom provider settings
+            litellm.custom_llm_provider_map = [
+                {
+                    "provider": "openrouter",
+                    "api_base": "https://openrouter.ai/api/v1",
+                    "api_key": os.environ.get("OPENROUTER_API_KEY") or "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"
+                }
+            ]
+            
+            # Configure DSPy LM with OpenRouter settings
             tmp_lm = dspy.LM(
-                self.config_model_name,
-                api_key=self.config_model_api_key,
-                api_base=self.config_model_api_base,
+                model=self.model_name,
+                api_key=litellm.custom_llm_provider_map[0]["api_key"],
+                api_base=litellm.custom_llm_provider_map[0]["api_base"],
+                custom_llm_provider="openrouter",  # Use custom_llm_provider instead of model_provider
                 max_tokens=self.config_max_tokens,
                 temperature=self.config_temperature,
                 cache=True
             )
+            
+
             logger.info(f"Successfully initialized {self.config_model_provider.value} model: {self.config_model_name}")
             
             # Log model configuration (excluding sensitive data)

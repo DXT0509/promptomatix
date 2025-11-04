@@ -93,6 +93,44 @@ def process_input(**kwargs) -> Dict:
         optimizer = PromptOptimizer(config)
         optimizer.lm = lm
         
+        # If no train/validation data is present, create a small deterministic fallback
+        try:
+            if not getattr(config, 'train_data', None):
+                sdata = getattr(config, 'sample_data', None)
+                parsed = None
+                if sdata:
+                    if isinstance(sdata, str):
+                        try:
+                            parsed = json.loads(sdata)
+                        except Exception:
+                            try:
+                                parsed = ast.literal_eval(sdata)
+                            except Exception:
+                                parsed = None
+                    elif isinstance(sdata, list):
+                        parsed = sdata
+                    elif isinstance(sdata, dict):
+                        parsed = [sdata]
+                if isinstance(parsed, list) and parsed:
+                    import copy
+                    expected = getattr(config, 'synthetic_data_size', 2) or 2
+                    fallback = []
+                    # Lặp qua các mẫu, nhân bản cho đủ số lượng expected
+                    for i in range(expected):
+                        sample_idx = i % len(parsed)
+                        fallback_sample = copy.deepcopy(parsed[sample_idx])
+                        fallback_sample['_fallback'] = True
+                        fallback.append(fallback_sample)
+                    # split into train/valid
+                    train_size = getattr(config, 'train_data_size', None)
+                    if not train_size:
+                        train_size = max(1, int(len(fallback) * getattr(config, 'train_ratio', 0.5)))
+                    config.train_data = fallback[:train_size]
+                    config.valid_data = fallback[train_size:]
+                    print(f"[INFO] Using deterministic fallback synthetic data: train={len(config.train_data)}, valid={len(config.valid_data)}")
+        except Exception as _e:
+            print(f"[WARN] Failed to build deterministic fallback samples: {_e}")
+
         print("🎯 Running optimization...")
         result = optimizer.run(initial_flag=True)
 
@@ -122,6 +160,9 @@ def process_input(**kwargs) -> Dict:
         # Update session with optimized prompt
         if isinstance(result.get('result'), str):
             session.update_optimized_prompt(result['result'])
+        
+        # Save session to file so it can be retrieved later for feedback
+        session_manager.update_session(session)
                 
         print("✅ Optimization completed successfully!")
         return result
@@ -869,14 +910,38 @@ def display_fancy_result(result: Dict) -> None:
             initial_score = metrics['initial_prompt_score']
             optimized_score = metrics['optimized_prompt_score']
             improvement = optimized_score - initial_score
-            
-            print(f"{Fore.WHITE}Initial Score: {Fore.RED}{initial_score:.4f}{Style.RESET_ALL}")
-            print(f"{Fore.WHITE}Optimized Score: {Fore.GREEN}{optimized_score:.4f}{Style.RESET_ALL}")
-            
-            if improvement > 0:
-                print(f"{Fore.WHITE}Improvement: {Fore.GREEN}+{improvement:.4f} ({improvement/initial_score*100:.1f}%){Style.RESET_ALL}")
+
+            # Print scores safely
+            try:
+                print(f"{Fore.WHITE}Initial Score: {Fore.RED}{initial_score:.4f}{Style.RESET_ALL}")
+            except Exception:
+                print(f"{Fore.WHITE}Initial Score: {Fore.RED}{initial_score}{Style.RESET_ALL}")
+            try:
+                print(f"{Fore.WHITE}Optimized Score: {Fore.GREEN}{optimized_score:.4f}{Style.RESET_ALL}")
+            except Exception:
+                print(f"{Fore.WHITE}Optimized Score: {Fore.GREEN}{optimized_score}{Style.RESET_ALL}")
+
+            # Avoid division by zero when initial_score is zero or falsy
+            if not initial_score or float(initial_score) == 0.0:
+                pct_change = None
             else:
-                print(f"{Fore.WHITE}Change: {Fore.RED}{improvement:.4f} ({improvement/initial_score*100:.1f}%){Style.RESET_ALL}")
+                pct_change = (improvement / float(initial_score)) * 100.0
+
+            if improvement > 0:
+                if pct_change is None:
+                    pct_str = "N/A (initial score is 0)"
+                else:
+                    pct_str = f"{pct_change:.1f}%"
+                print(f"{Fore.WHITE}Improvement: {Fore.GREEN}+{improvement:.4f} ({pct_str}){Style.RESET_ALL}")
+            else:
+                if pct_change is None:
+                    pct_str = "N/A (initial score is 0)"
+                else:
+                    pct_str = f"{pct_change:.1f}%"
+                print(f"{Fore.WHITE}Change: {Fore.RED}{improvement:.4f} ({pct_str}){Style.RESET_ALL}")
+            # Print warning if present
+            if result.get('warning'):
+                print(f"{Fore.YELLOW}{result.get('warning')}{Style.RESET_ALL}")
         
         # Cost and Time
         if 'cost' in metrics:
@@ -930,6 +995,30 @@ def main():
     try:
         # Parse command line arguments
         args = parse_args()
+
+        # Handle feedback operations first
+        if args.get('optimize_with_feedback'):
+            session_id = args.get('session_id')
+            if not session_id:
+                print("❌ Error: --session_id is required with --optimize_with_feedback")
+                sys.exit(1)
+            
+            # Save feedback if provided
+            if args.get('feedback'):
+                print(f"💾 Saving feedback for session {session_id}...")
+                save_feedback(
+                    text="",
+                    start_offset=0,
+                    end_offset=0,
+                    feedback=args.get('feedback'),
+                    prompt_id=session_id
+                )
+            
+            # Run optimization with feedback
+            print(f"🔄 Optimizing with feedback for session {session_id}...")
+            result = optimize_with_feedback(session_id)
+            display_fancy_result(result)
+            return
 
         # Process optimization
         if args.get('raw_input') or args.get('huggingface_dataset_name'):

@@ -445,7 +445,7 @@ def generate_sample_data_from_task_description(task_description: str) -> str:
     Generate 1 example of input data that would be relevant to the task description. Output the input data in a json format.
     Sample data needs to have the model input and expected output.
     Example:
-    Task description: somethign related to questions and answers
+    Task description: something related to questions and answers
     Output: {{"question": "What is the capital of France?", "answer": "Paris"}}
 
     Task description: something related to text generation
