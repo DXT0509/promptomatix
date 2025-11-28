@@ -11,6 +11,9 @@ import re
 import math
 from langdetect import detect  # You'll need to: pip install langdetect
 from ..core.config import LambdaPenalty  # Fix the import path
+from sentence_transformers import SentenceTransformer
+from sentence_transformers.util import cos_sim
+import torch
 
 # Set environment variables to suppress warnings
 os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
@@ -35,19 +38,41 @@ def suppress_stderr():
         finally:
             sys.stderr = old_stderr
 
-# Now import BERTScore after setting up suppression
-from bert_score import score as bert_score_original
+# Replace BERTScore with SentenceTransformer cosine similarity to reduce heavy model downloads
+# and unify all metric calls. We mimic the BERTScore API by returning (P,R,F1) tensors, all equal
+# to the cosine similarity scores.
 
-# Create a silent wrapper for BERTScore
-def bert_score_silent(*args, **kwargs):
-    """BERTScore wrapper that suppresses all stderr output."""
-    with suppress_stderr():
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            return bert_score_original(*args, **kwargs)
+_st_model = SentenceTransformer("all-mpnet-base-v2")
 
-# Replace the original import
-bert_score_metric = bert_score_silent
+def bert_score_metric(cands: List[str], refs: List[str], **kwargs):
+    """SentenceTransformer similarity wrapper mimicking BERTScore output signature.
+    Returns (P,R,F1) tensors all equal to cosine similarity scores.
+    Broadcasting: if lengths differ and one list has length 1, broadcast that element.
+    If lengths differ otherwise, pairwise similarities matrix is reduced by max per candidate.
+    """
+    try:
+        if not cands:
+            cands = [""]
+        if not refs:
+            refs = [""]
+        # Broadcast single element list
+        if len(cands) != len(refs):
+            if len(refs) == 1:
+                refs = refs * len(cands)
+            elif len(cands) == 1:
+                cands = cands * len(refs)
+        cand_emb = _st_model.encode(cands, convert_to_tensor=True)
+        ref_emb = _st_model.encode(refs, convert_to_tensor=True)
+        sim_matrix = cos_sim(cand_emb, ref_emb)  # shape (Nc, Nr)
+        if sim_matrix.shape[0] == sim_matrix.shape[1]:
+            sims_tensor = torch.diag(sim_matrix)
+        else:
+            # Reduce to a single similarity per candidate (take max over refs)
+            sims_tensor = torch.max(sim_matrix, dim=1).values
+        return sims_tensor, sims_tensor, sims_tensor
+    except Exception:
+        sims_tensor = torch.zeros(len(cands) if cands else 1, dtype=torch.float32)
+        return sims_tensor, sims_tensor, sims_tensor
 
 class MetricsManager:
     _output_fields = None  # Class-level storage for output fields
@@ -205,7 +230,7 @@ class MetricsManager:
             length_penalty = math.exp(-lambda_penalty * prompt_length)  # Exponential decay
 
 
-            return ((em_score + score) / 2) * length_penalty
+            return score * length_penalty
             
         except Exception as e:
             print(f"--------------------------------")
@@ -474,8 +499,7 @@ class MetricsManager:
             # # Convert tensor to float and take mean
             score = float(F1.mean())
 
-
-            return ((em_score + score) / 2)
+            return score
             
         except Exception as e:
             print(f"--------------------------------")
@@ -485,7 +509,7 @@ class MetricsManager:
             print(f"--------------------------------")
             # Return 0 score for failed comparisons
             return 0.0
-
+    
     @staticmethod
     def _classification_metrics_final_eval(example: Any, pred: Any, instructions: Any = None, trace: Any = None) -> float:
         """Compute metrics for Classification tasks.
@@ -494,9 +518,11 @@ class MetricsManager:
         Returns:
             float: Score between 0 and 1
         """
+        def normalize_label(s):
+            return re.sub(r'\s+', ' ', s.lower()).strip()
         gold_label = MetricsManager._get_output_value(example)
         pred_label = MetricsManager._get_output_value(pred)
-        em_score = float(gold_label.lower().strip() == pred_label.lower().strip())
+        em_score = float(normalize_label(gold_label) == normalize_label(pred_label))
 
         return em_score 
     
@@ -1242,11 +1268,7 @@ class MetricsManager:
             # Calculate response similarity
             P, R, F1 = bert_score_metric([pred_response], [gold_response], lang="en", rescale_with_baseline=False)
             response_similarity = float(F1.mean())
-            
-            # Evaluate coherence
-            coherent_ref = "This is a coherent, contextually appropriate, and well-structured response."
-            _, _, coherence = bert_score_metric([pred_response], [coherent_ref], lang="en", rescale_with_baseline=False)
-            coherence_score = float(coherence.mean())
+      
             
             return (response_similarity + coherence_score) / 2
         except Exception as e:

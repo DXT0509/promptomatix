@@ -2,6 +2,7 @@ import os
 import ast
 import json
 import logging
+from dotenv import load_dotenv
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -273,6 +274,11 @@ class Config:
             ValueError: If configuration parameters are invalid or inconsistent.
                        See class documentation for specific error conditions.
         """
+        # Load .env first so os.environ includes keys from the file
+        try:
+            load_dotenv()
+        except Exception:
+            pass
         setup_config_logger()
 
         # Input source parameters (required)
@@ -281,7 +287,7 @@ class Config:
         self.huggingface_dataset_name = kwargs.get('huggingface_dataset_name')
         self.original_raw_input = kwargs.get('original_raw_input')
         self.session_id = None
-
+        
         # Task configuration
         self.task_description = kwargs.get('task_description')
         self.sample_data = kwargs.get('sample_data')
@@ -298,10 +304,10 @@ class Config:
         self.model_api_key = kwargs.get('model_api_key')
         self.model_api_base = kwargs.get('model_api_base')
         self.model_provider = kwargs.get('model_provider')
-        self.temperature = kwargs.get('temperature', 0.5)  # Default temperature (deterministic)
-        self.max_tokens = kwargs.get('max_tokens', 4000)  # Default max tokens
-        self.config_max_tokens = kwargs.get('config_max_tokens', 14000)  # Default max tokens
-        self.config_temperature = kwargs.get('config_temperature', 0.5)
+        self.temperature = kwargs.get('temperature', 0.3)  # Default temperature (deterministic)
+        self.max_tokens = kwargs.get('max_tokens', 8000)  # Default max tokens
+        self.config_max_tokens = kwargs.get('config_max_tokens', 8000)  # Default max tokens
+        self.config_temperature = kwargs.get('config_temperature', 0.3)
         self.config_model_name = kwargs.get('config_model_name')
         self.config_model_provider = kwargs.get('config_model_provider')
         self.config_model_api_key = kwargs.get('config_model_api_key')
@@ -344,6 +350,26 @@ class Config:
         self.local_train_data_path = kwargs.get('local_train_data_path')
         self.local_test_data_path = kwargs.get('local_test_data_path')
 
+        self.judge_model_provider = kwargs.get('judge_model_provider') or os.environ.get('JUDGE_MODEL_PROVIDER')
+        self.judge_model_name = kwargs.get('judge_model_name') or os.environ.get('JUDGE_MODEL_NAME')
+        # Prefer explicit kwarg, then JUDGE_API_KEY from env/.env, then OPENROUTER_API_KEY
+        self.judge_model_api_key = (
+            kwargs.get('judge_model_api_key')
+            or os.environ.get('JUDGE_API_KEY')
+            or os.environ.get('OPENROUTER_API_KEY')
+        )
+        self.judge_model_api_base = kwargs.get('judge_model_api_base') or os.environ.get('JUDGE_API_BASE')
+        try:
+            src = (
+                'kwargs' if kwargs.get('judge_model_api_key') else (
+                    'env:JUDGE_API_KEY' if os.environ.get('JUDGE_API_KEY') else (
+                        'env:OPENROUTER_API_KEY' if os.environ.get('OPENROUTER_API_KEY') else 'none'
+                    )
+                )
+            )
+            print(f"[DEBUG] (Config) judge api key source: {src}", flush=True)
+        except Exception:
+            pass
         # Validate backend
         if self.backend not in ['dspy', 'simple_meta_prompt']:
             raise ValueError(f"Invalid backend: {self.backend}. Must be 'dspy' or 'simple_meta_prompt'")
@@ -355,7 +381,6 @@ class Config:
             self._populate_config_from_huggingface()
         else:
             raise ValueError("Either huggingface_dataset_name or raw_input must be provided")
-
         # Final validation of required fields
         # self._validate()
 
@@ -397,7 +422,15 @@ class Config:
         self._develop_prompt_template_components(tmp_lm)
 
         self.task_description = self._extract_task_description(tmp_lm)
-        logger.info(f"Task description extracted: {self.task_description[:100]}...")
+        # after: self.task_description = self._extract_task_description(tmp_lm)
+        # Guard against None: some LLM calls may return None/empty string
+        td_preview = ''
+        try:
+            if isinstance(self.task_description, str) and self.task_description:
+                td_preview = self.task_description[:100]
+        except Exception:
+            td_preview = ''
+        logger.info(f"Task description extracted: {td_preview}{'...' if td_preview and len(td_preview) == 100 else ''}")
 
         self.input_fields, self.output_fields = self._extract_fields(tmp_lm)
         logger.info(
@@ -476,7 +509,15 @@ class Config:
         #    logger.info("Human input improvised")
 
         self.task_description = self._extract_task_description(tmp_lm)
-        logger.info(f"Task description extracted: {self.task_description[:100]}...")
+        # after: self.task_description = self._extract_task_description(tmp_lm)
+        # Guard against None: some LLM calls may return None/empty string
+        td_preview = ''
+        try:
+            if isinstance(self.task_description, str) and self.task_description:
+                td_preview = self.task_description[:100]
+        except Exception:
+            td_preview = ''
+        logger.info(f"Task description extracted: {td_preview}{'...' if td_preview and len(td_preview) == 100 else ''}")
 
         self.sample_data = self._extract_sample_data(tmp_lm)
         logger.info(f"Sample data extracted: {self.sample_data[:100]}...")
@@ -1346,7 +1387,18 @@ class Config:
         if 'none' not in response.lower():
             try:
                 fields = json.loads(response)
-                return fields.get('input_fields', []), fields.get('output_fields', [])
+                # If the model returned a dict, use explicit keys
+                if isinstance(fields, dict):
+                    return fields.get('input_fields', []), fields.get('output_fields', [])
+                # If the model returned a list (e.g. ["question", "answer"]),
+                # assume it's a list of input fields and return it as input_fields
+                if isinstance(fields, list):
+                    # ensure all items are strings
+                    input_fields_parsed = [f for f in fields if isinstance(f, str)]
+                    return input_fields_parsed, []
+                # Unexpected type
+                logger.warning(f"Unexpected fields JSON type: {type(fields)}")
+                return [], []
             except json.JSONDecodeError:
                 logger.warning("Failed to parse fields JSON response")
                 return [], []
@@ -1529,7 +1581,7 @@ class Config:
         
         return train_dataset, test_dataset
 
-    def _load_local_datasets(self) -> tuple[Dataset, Dataset]:
+    def  _load_local_datasets(self) -> tuple[Dataset, Dataset]:
         """Load datasets from local CSV files."""
         import pandas as pd
         

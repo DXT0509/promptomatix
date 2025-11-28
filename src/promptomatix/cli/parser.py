@@ -41,6 +41,10 @@ def parse_args() -> Dict:
     model_group.add_argument("--dspy_module", type=str, help="DSPy module")
     model_group.add_argument("--backend", type=str, 
                            help="Optimization backend ('dspy' or 'simple_meta_prompt', default: 'simple_meta_prompt')")
+    model_group.add_argument("--judge_model_provider", type=str, help="Judge model provider for evaluation (optional)")
+    model_group.add_argument("--judge_model_name", type=str, help="Judge model name (optional)")
+    model_group.add_argument("--judge_model_api_key", type=str, help="Judge model API key (optional; else use JUDGE_API_KEY env)")
+    model_group.add_argument("--judge_model_api_base", type=str, help="Judge model API base URL (optional)")
     
     # Data configuration
     data_group = parser.add_argument_group('Data Configuration')
@@ -92,6 +96,8 @@ def parse_args() -> Dict:
                               help="Feedback text to save and optimize with")
     feedback_group.add_argument("--optimize_with_feedback", action="store_true",
                               help="Re-optimize using feedback for the given session_id")
+    feedback_group.add_argument("--auto_generate_feedback", type=str,
+                              help="Generate feedback automatically for the given session ID and re-optimize")
     
     args = parser.parse_args()
     
@@ -101,6 +107,7 @@ def parse_args() -> Dict:
     # Check if this is a feedback operation
     is_feedback_operation = (
         parsed_dict.get('optimize_with_feedback') or 
+        parsed_dict.get('auto_generate_feedback') or 
         parsed_dict.get('list_feedbacks') or 
         parsed_dict.get('analyze_feedbacks') or 
         parsed_dict.get('export_feedbacks')

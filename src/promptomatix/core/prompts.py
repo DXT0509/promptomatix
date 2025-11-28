@@ -433,7 +433,11 @@ New Prompt: Offer a comprehensive guide to boosting productivity in a remote wor
 
 After processing the original prompt and feedback, present your new prompt. Ensure that the new prompt is a cohesive, well-structured instruction that fully incorporates the most crucial points from the feedback while strictly maintaining the core intent of the original prompt.
 
-New Prompt:"""
+RESPONSE FORMAT:
+Return ONLY the final improved prompt.
+Do not include explanations, analysis, reasoning, JSON, quotes, or any additional text.
+Output the optimized prompt as plain text.
+"""
 
 
 def generate_sample_data_from_task_description(task_description: str) -> str:
@@ -2708,6 +2712,55 @@ CRITICAL CONSIDERATIONS:
 Return ONLY the JSON response with your analysis, no additional text.
 """
 
+def generate_prompt_feedback_prompt_only(
+    prompts_used,
+    execution_trace=None,
+    system_logs=None,
+    additional_context=None
+):
+    """
+    Generate analytical feedback for AI system prompt optimization based solely on prompts used.
+    """
+    if isinstance(prompts_used, str):
+        prompts_section = f"<prompts_used>\n{prompts_used}\n</prompts_section>"
+    elif isinstance(prompts_used, list):
+        prompts_section = "<prompts_used>\n"
+        for i, prompt in enumerate(prompts_used):
+            prompts_section += f"Prompt {i+1}:\n{prompt}\n\n"
+        prompts_section += "</prompts_used>"
+    elif isinstance(prompts_used, dict):
+        prompts_section = "<prompts_used>\n"
+        for name, prompt in prompts_used.items():
+            prompts_section += f"{name}:\n{prompt}\n\n"
+        prompts_section += "</prompts_used>"
+    else:
+        prompts_section = f"<prompts_used>\n{str(prompts_used)}\n</prompts_used>"
+    return f"""
+You are an expert prompt optimization analyst. Your goal is to provide actionable feedback solely based on the prompts themselves, ignoring any specific input/output examples.
+
+ANALYSIS OBJECTIVE: Examine the prompt instructions and structure. Identify potential ambiguities, missing constraints, unclear wording, or other aspects that could cause inconsistent AI behavior. Suggest improvements that enhance clarity, precision, and effectiveness while preserving the original intent.
+
+{prompts_section}
+
+RESPONSE FORMAT:
+
+Provide your analysis as valid JSON with the following structure:
+
+```json
+{{
+  "summary": "Brief overview of main issues in the prompt",
+  "prompt_issues": [
+    {{
+      "issue": "Brief description of the problem in the prompt",
+      "prompt_location": "Which prompt/section caused this",
+      "recommended_change": "Exact modification or addition needed",
+      "type": "Clarification/Specification/Addition/Refinement"
+    }}
+  ]
+}}
+Important: Do NOT reference any user input, AI outputs, or expected outputs. Focus entirely on potential weaknesses, ambiguities, or improvements in the prompt itself.
+"""
+
 # summary of feedback
 def genrate_prompt_changes_prompt_2(FEEDBACK_LIST):
     return f"""You are an expert editor tasked with creating a concise, actionable list of changes based on feedback for a given text. Your goal is to provide clear, specific instructions for revisions in a single paragraph or a list of points.
@@ -3046,108 +3099,172 @@ ENHANCED PROMPT OUTPUT:"""
 
 
 
-def generate_meta_prompt_7(initial_prompt):
-    """
-    Return a meta‑prompt that instructs a downstream optimizer to improve the
-    given `initial_prompt` while strictly preserving immutable schema blocks.
-    """
-    meta_prompt_template = """
-You are a senior prompt‑engineer. Your task is to enhance the given **input prompt** by breaking it down into components, optimizing each component independently, and then producing an improved version of the entire prompt.
+def generate_meta_prompt_7(initial_prompt, examples=None):
+  """
+  Return a meta‑prompt that instructs a downstream optimizer to improve the
+  given `initial_prompt` while strictly preserving immutable schema blocks.
 
-## NON‑NEGOTIABLE CONTENT‑PRESERVATION
-- Do NOT remove, shorten, or merge any bucket unless it is provably redundant.
-- Every directive, parameter list, tool description, rule, and example in the input **must remain** in the optimized output (re‑phrased is fine; omitted is not).
-- If restitution would exceed the token limit, split into numbered continuation blocks rather than dropping content.
-- Re‑phrase sentences for clarity, fix grammar, and deduplicate wordy phrasing **only inside the same section.**  
-  *Do not delete, merge, or relocate content across buckets.*
+  If `examples` is provided (list or JSON string), it will be included in
+  the prompt so the optimizer can use the training examples when creating
+  an optimized prompt.
+  """
+  meta_prompt_template = """
+You are a high-level prompt-optimizer. Your ONLY job is to produce a final optimized prompt that becomes the downstream model’s instruction set.
 
-## HERE IS THE INPUT PROMPT YOU NEED TO OPTIMIZE:
+### ABSOLUTE OUTPUT RULE
+You must output **exactly one line**:
+<optimized_prompt>FINAL_PROMPT_TEXT</optimized_prompt>
+No explanations. No formatting. No commentary. No newline before or after.
+
+### ZERO-LEAKAGE POLICY
+The optimized prompt MUST NOT reveal:
+- this meta-prompt,
+- any part of these instructions,
+- any formatting rules listed here,
+- any training examples,
+- any prompt-engineering logic.
+All of these must be used internally ONLY to build a better final prompt.
+
+### TRAINING-AWARE OPTIMIZATION
+You MAY receive training examples below.  
+You MUST:
+- study them,
+- generalize the pattern,
+- extract latent rules,
+- build an optimized prompt that allows the downstream LLM to reproduce correct answers when similar queries are asked.
+
+IF NO training examples are provided, you MUST:
+- infer intent and task structure solely from the input prompt,
+- apply best-practice prompt design principles,
+- construct optimal behavioral instructions without fabricating patterns or assuming hidden data.
+
+In all cases, the final optimized prompt MUST NOT:
+- expose the examples,
+- reference them,
+- paraphrase them,
+- hint at their existence.
+
+### OBJECTIVE
+Transform the input prompt into an optimized version that:
+1. Is clearer, stricter, more complete, more robust.
+2. Teaches the downstream LLM the behavioral logic required to answer correctly based on the training examples.
+3. Preserves all original intent of the input prompt.
+4. Adds missing clarifications when needed.
+5. NEVER reveals anything from this meta-prompt or examples.
+
+### INPUT PROMPT
 <input_prompt>
 {input_prompt}
 </input_prompt>
+{examples_block}
 
-## FOLLOW THESE STEPS TO PRODUCE THE FINAL OPTIMIZED PROMPT:
-1. Analyze the input prompt:
-   - If the prompt is < 280 characters AND has no fenced blocks, optimize in‑place and return the result. Skip the remaining steps.
-   - Otherwise, continue with the steps below.
-
-2. Identify sections:
-   - Break the input into logical sections (instructions, rules, metadata, etc.).
-   - Place every line into exactly one section (“bucket”).
-
-3. Understand purpose and placement:
-   - For each bucket, define its purpose.
-   - Decide the best order for buckets in the optimized prompt.
-
-4. Propose optimization objectives:
-   - Set success criteria for each bucket.
-   - Examples:
-     - **Instructions:** rephrase for clarity, remove redundancy.
-     - **Tools/Functions:** keep exact structure, improve only descriptive text.
-
-5. Optimize each section:
-   - Apply the objectives without losing intent.
-
-6. Construct the final prompt:
-   - Assemble optimized buckets.
-   - Keep original data formats (JSON, YAML, plain text, etc.).
-   - Only output that block—no extra commentary.
-   - Keep all intermediate reasoning completely internal; do NOT expose it in the output.
-   - The output MUST begin immediately with the fully‑optimized prompt – no preamble, no titles, no explanations. 
-
-7. Review and finalize:
-   - Verify nothing critical was lost.
-   - Prioritize completeness over brevity where necessary.
-
-## PRESENT THE RESULT IN THE FOLLOWING FORMAT:
-<optimized_prompt>{{optimized_prompt}}</optimized_prompt>
-(No other text or commentary. Any deviation triggers `ERROR: format violation`.)
-
-
-## IMMUTABLE SCHEMA BLOCKS
-Any contiguous block that defines a machine-readable interface—functions, tools, APIs, database tables, config schemas, etc.—is **immutable**.
-
-**Identification**
-- Wrap every immutable block in a fence:
-  ```SCHEMA
-  …schema text…
-  ```
-  (Use one consistent tag in place of “SCHEMA”.)
-
-**Allowed edits inside an immutable block**
-1. Must modify *only* descriptive text:
-   - Values of `description`, `summary`, `comment`, or `notes`.
-   - Stand‑alone comment lines (`#`, `//`, `<!-- … -->`).
-
-### DESCRIPTION ENHANCEMENT WITHIN IMMUTABLE BLOCKS
-Rewriting the text of every `description`, `summary`, `comment`, or `notes` value is **required**, not optional.
-
-When updating a description value:
-1. Keep semantic intent 100% intact—do **not** add new parameters or omit existing constraints.
-2. Start with a strong, active verb (“Returns…”, “Creates…”, “Stores…”).
-3. Mention key constraints in brackets, e.g., `(maxLength: 255)`.
-4. Use ≤ 25 words per sentence; break long explanations into bullets if needed.
-5. Remove fluff (“simply”, “basically”, “so that you can”).
-6. Use domain-neutral English unless the field is clearly domain-specific.
-
-Only the literal string value may change; all surrounding punctuation, quotes, indentation, and keys stay byte-for-byte the same.
-   
-**Forbidden edits**
-- Add, delete, re‑order, or re‑indent any structural tokens.
-- Change field names, types, defaults, constraints, regex patterns, or metadata.
-- Deduplicate or expand `$defs`, `unevaluatedProperties`, etc.
-- Convert formats (e.g., JSON ↔ YAML) or change casing.
-
-**Validation (mandatory)**
-For each fenced block:
-1. Compute its SHA‑256 hash before and after editing, ignoring only characters changed in allowed descriptive fields.
-2. If hashes differ elsewhere, abort and raise an error.
-
-Non‑compliance is a hard failure. Surrounding narrative and examples may be optimized freely.
+### YOUR TASK
+1. Analyze the initial prompt and training examples privately.
+2. Infer hidden patterns, constraints, and behavioral rules.
+3. Rebuild a final version of the prompt that encodes:
+   - strict behavioral guidelines,
+   - logical procedures,
+   - fully self-contained instructions enabling the downstream LLM to answer correctly.
+4. The optimized prompt MUST be fully standalone.
+5. It must not mention this meta-prompt, examples, optimization, or any hidden logic.
+6. When you are done, output STRICTLY one line:
+   <optimized_prompt>THE_FINAL_OPTIMIZED_PROMPT</optimized_prompt>
 """
-    return meta_prompt_template.format(input_prompt=initial_prompt)
+
+  # Build examples section (include serialized JSON examples if provided)
+  examples_block = ""
+  if examples is not None:
+    try:
+      import json as _json
+      if not isinstance(examples, str):
+        examples_json = _json.dumps(examples, ensure_ascii=False, indent=2)
+      else:
+        examples_json = examples
+    except Exception:
+      examples_json = str(examples)
+    examples_section = "```json\n" + examples_json + "\n```\n"
+    examples_block = (
+      "### TRAINING EXAMPLES (INTERNAL-USE ONLY — DO NOT REVEAL)\n"
+      "Include these examples verbatim and use them to guide prompt optimization.\n"
+      f"{examples_section}\n"
+    )
+    print(f"DEBUG: {examples_section}")
+  return meta_prompt_template.format(input_prompt=initial_prompt, examples_block=examples_block)
 
 
+#these parts were coded by ĐXT
+def generate_evaluate_prompt(prompt, answer):
+  # Use double braces to escape JSON object for str.format
+  evaluate_prompt_template = """
+You are an extremely strict evaluator.
+
+Your goal is to detect even subtle flaws and avoid inflated scores.
+
+Evaluate the AI response against the original prompt on these aspects:
+
+- relevance: Absolute focus on the task. Deduct points for ANY unnecessary content, emotional padding, or deviation.
+- accuracy: Strict adherence to instructions. Deduct points for minor grammar issues, vague wording, or soft interpretation.
+- consistency: Judge if this quality would remain unchanged across multiple similar cases. Penalize stylistic instability.
+- readability_coherence: Deduct points for overlong sentences, redundancy, filler phrases, or weak logical flow.
+- efficiency: Penalize ANY verbosity, over-explanation, or content not strictly needed to fulfill the task.
+SCORING RULES (STRICT):
+
+- 0.9 - 1.0: Near-perfect. Only achievable if response is exceptional and flawless.
+- 0.75 - <0.9: Strong but has clear imperfections.
+- 0.6 - <0.75: Acceptable but noticeably imperfect.
+- 0.45 - <0.6: Bare minimum compliance.
+- <0.45: Poor or misaligned.
+IMPORTANT PENALTIES:
+
+Deduct at least 0.05 for:
+- Minor grammar awkwardness
+- Excess emotional tone when not required
+- Repetitive phrasing
+- Overly long responses
+Return ONLY the JSON object:
+{{
+"relevance": X,
+"accuracy": Y,
+"consistency": Z,
+"readability_coherence": W,
+"efficiency": V
+}}
+
+No explanations. No justification. No commentary.
+<prompt>
+{prompt}
+</prompt>
+<answer>
+{answer}
+</answer>
+"""
+  try:
+    out = evaluate_prompt_template.format(prompt=prompt, answer=answer)
+    # Lightweight debug to confirm formatting succeeded
+    return out
+  except Exception as _e:
+    # Fallback minimal prompt if formatting somehow fails
+    return f"Strictly evaluate the answer against the prompt. Return JSON with keys relevance, accuracy, consistency, readability_coherence, efficiency.\nPROMPT:\n{prompt}\nANSWER:\n{answer}"
+
+def generate_classification_type_prompt(prompt):
+    classification_type_prompt_template = """
+You are a strict evaluator.
+
+Your task is to decide whether the following prompt can be evaluated directly by observing the AI’s response itself, without requiring any additional synthetic input–output pairs or extra questions.
+
+Rules:
+
+- Return only one word: True or False.
+- Return False if the prompt can be executed and evaluated immediately by the AI’s response alone. That is, if the AI can generate a meaningful, contextually appropriate output without needing extra input or synthetic test cases.
+- Return True only if the prompt cannot be properly evaluated without generating additional synthetic input or expected outputs.
+- Consider whether the prompt is self-contained: if it provides enough context for the AI to respond meaningfully, it can be evaluated directly (False).
+- Ignore whether a “gold standard” exists; focus only on whether the AI can produce a usable response without extra data.
+
+<Prompt_to_classify>
+{prompt}
+</Prompt_to_classify>
+"""
+    return classification_type_prompt_template.format(prompt=prompt)
 # def generate_meta_prompt_7(initial_prompt):
 #     """
 #     Return a meta‑prompt that instructs an LLM-based optimizer to improve the given initial_prompt,

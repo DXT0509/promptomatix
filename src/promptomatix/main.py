@@ -93,46 +93,10 @@ def process_input(**kwargs) -> Dict:
         optimizer = PromptOptimizer(config)
         optimizer.lm = lm
         
-        # If no train/validation data is present, create a small deterministic fallback
-        try:
-            if not getattr(config, 'train_data', None):
-                sdata = getattr(config, 'sample_data', None)
-                parsed = None
-                if sdata:
-                    if isinstance(sdata, str):
-                        try:
-                            parsed = json.loads(sdata)
-                        except Exception:
-                            try:
-                                parsed = ast.literal_eval(sdata)
-                            except Exception:
-                                parsed = None
-                    elif isinstance(sdata, list):
-                        parsed = sdata
-                    elif isinstance(sdata, dict):
-                        parsed = [sdata]
-                if isinstance(parsed, list) and parsed:
-                    import copy
-                    expected = getattr(config, 'synthetic_data_size', 2) or 2
-                    fallback = []
-                    # Lặp qua các mẫu, nhân bản cho đủ số lượng expected
-                    for i in range(expected):
-                        sample_idx = i % len(parsed)
-                        fallback_sample = copy.deepcopy(parsed[sample_idx])
-                        fallback_sample['_fallback'] = True
-                        fallback.append(fallback_sample)
-                    # split into train/valid
-                    train_size = getattr(config, 'train_data_size', None)
-                    if not train_size:
-                        train_size = max(1, int(len(fallback) * getattr(config, 'train_ratio', 0.5)))
-                    config.train_data = fallback[:train_size]
-                    config.valid_data = fallback[train_size:]
-                    print(f"[INFO] Using deterministic fallback synthetic data: train={len(config.train_data)}, valid={len(config.valid_data)}")
-        except Exception as _e:
-            print(f"[WARN] Failed to build deterministic fallback samples: {_e}")
+        
 
         print("🎯 Running optimization...")
-        result = optimizer.run(initial_flag=True)
+        result = optimizer.run(initial_flag=False)
 
         # Check if result contains an error
         if 'error' in result:
@@ -212,23 +176,36 @@ def optimize_with_feedback(session_id: str) -> Dict:
         
         # Use the latest feedback
         latest_feedback = max(session_feedbacks, key=lambda x: x['created_at'])
-        
+       
         # Create feedback config
         feedback_config = Config(
-            raw_input=f"Prompt: {session.latest_optimized_prompt}\n\nFeedback: {latest_feedback['feedback']}",
-            original_raw_input=session.config.original_raw_input,
-            synthetic_data_size=session.config.synthetic_data_size,
-            train_ratio=session.config.train_ratio,
-            task_type=session.config.task_type,
-            model_name=session.config.model_name,
-            model_provider=session.config.model_provider,
-            model_api_key=session.config.model_api_key,
-            model_api_base=session.config.model_api_base,
-            dspy_module=session.config.dspy_module,
-            session_id=session_id
+        raw_input=f"Prompt: {session.latest_optimized_prompt}\n\nFeedback: {latest_feedback['feedback']}",
+        original_raw_input=session.config.raw_input,
+        synthetic_data_size=session.config.synthetic_data_size,
+        train_ratio=session.config.train_ratio,
+        task_type=session.config.task_type,
+        model_name=session.config.model_name,
+        model_provider=session.config.model_provider,
+        model_api_key=session.config.model_api_key,
+        model_api_base=session.config.model_api_base,
+        dspy_module=session.config.dspy_module,
+        # Preserve data loading options so Config can load local files or use provided data
+        train_data=session.config.train_data,
+        valid_data=session.config.valid_data,
+        load_data_local=getattr(session.config, 'load_data_local', False),
+        local_train_data_path=getattr(session.config, 'local_train_data_path', None),
+        local_test_data_path=getattr(session.config, 'local_test_data_path', None),
+        train_data_size=getattr(session.config, 'train_data_size', None),
+        valid_data_size=getattr(session.config, 'valid_data_size', None),
+        session_id=session_id
         )
         
+
+        #feedback_config.raw_input=session.config.raw_input
+        
+        
         # Initialize optimizer
+
         optimizer = PromptOptimizer(feedback_config)
         
         # Reset DSPy configuration for this thread
@@ -249,7 +226,7 @@ def optimize_with_feedback(session_id: str) -> Dict:
         optimizer.lm = lm
         
         # Run optimization
-        result = optimizer.run(initial_flag=False)
+        result = optimizer.run()
 
         # Check if result contains an error
         if 'error' in result:
@@ -277,6 +254,11 @@ def optimize_with_feedback(session_id: str) -> Dict:
         # Update session with new optimized prompt if successful
         if isinstance(result.get('result'), str):
             session.update_optimized_prompt(result['result'])
+            # Persist the change so subsequent runs / auto feedback see the latest version
+            try:
+                session_manager.update_session(session)
+            except Exception as _e:
+                print(f"[WARN] Failed to persist updated optimized prompt for session {session_id}: {_e}")
         
         print("✅ Feedback optimization completed!")
         return result
@@ -300,6 +282,124 @@ def optimize_with_feedback(session_id: str) -> Dict:
             'session_id': session_id,
             'result': None,
             'metrics': None
+        }
+
+def optimize_with_auto_feedback(session_id: str) -> Dict:
+    """
+    Generate feedback for the latest optimized prompt in a session,
+    then run feedback-based optimization and return the improved result.
+    """
+    try:
+        print("🔁 Running auto feedback generation + optimization...")
+        session = session_manager.get_session(session_id)
+        if not session:
+            raise ValueError(f"Session {session_id} not found")
+            # Collect essentials from session
+        optimized_prompt = getattr(session, "latest_optimized_prompt", None)
+        print(f"DEBUGDXT: {optimized_prompt}")
+        if not optimized_prompt:
+            raise ValueError("No optimized prompt found in this session. Run initial optimization first.")
+
+        cfg = session.config
+        model_name = cfg.model_name
+        model_api_key = cfg.model_api_key
+        model_api_base = getattr(cfg, "model_api_base", None)
+        input_fields = getattr(cfg, "input_fields", None)
+        output_fields = getattr(cfg, "output_fields", None)
+
+        if not input_fields or not output_fields:
+            raise ValueError("Missing input_fields/output_fields in session config.")
+
+        # Find synthetic data: prefer valid_data + train_data (concatenate) then fallback to parsed sample_data
+        valid_data = getattr(cfg, "valid_data", None) or []
+        train_data = getattr(cfg, "train_data", None) or []
+        # Ensure we produce a list (concatenate valid first then train)
+        synthetic_data = []
+        if isinstance(valid_data, list):
+            synthetic_data.extend(valid_data)
+        if isinstance(train_data, list):
+            synthetic_data.extend(train_data)
+
+        if not synthetic_data:
+            sdata = getattr(cfg, "sample_data", None)
+            parsed = None
+            if sdata:
+                if isinstance(sdata, str):
+                    import json, ast
+                    try:
+                        parsed = json.loads(sdata)
+                    except Exception:
+                        try:
+                            parsed = ast.literal_eval(sdata)
+                        except Exception:
+                            parsed = None
+                elif isinstance(sdata, list):
+                    parsed = sdata
+                elif isinstance(sdata, dict):
+                    parsed = [sdata]
+            if isinstance(parsed, list) and parsed:
+                synthetic_data = parsed
+
+        if not synthetic_data or len(synthetic_data) == 0:
+            raise ValueError("No synthetic data available to generate feedback. Provide sample_data or train/valid data.")
+
+        # 1) Generate feedback
+        fb_result = generate_feedback(
+            optimized_prompt=optimized_prompt,
+            input_fields=input_fields,
+            output_fields=output_fields,
+            model_name=model_name,
+            model_api_key=model_api_key,
+            model_api_base=model_api_base,
+            synthetic_data=synthetic_data,
+            session_id=session_id,
+            max_samples=getattr(cfg, 'feedback_max_samples', None)
+        )
+
+        # Stop early if feedback generation failed
+        if isinstance(fb_result, dict) and fb_result.get('error'):
+            print(f"❌ Feedback generation failed: {fb_result.get('error')}")
+            return {
+                'error': fb_result.get('error'),
+                'session_id': session_id,
+                'result': None,
+                'metrics': None
+            }
+
+        print("🧾 Feedback generated.")
+
+        # Optionally store feedback summary on session for traceability
+        if fb_result and isinstance(fb_result, dict):
+            session.comprehensive_feedback = fb_result.get("comprehensive_feedback")
+            session.individual_feedbacks = fb_result.get("individual_feedbacks", [])
+            session_manager.update_session(session)
+
+            # Persist feedback to FeedbackStore so optimize_with_feedback can find it
+            comp_fb = fb_result.get("comprehensive_feedback")
+            if comp_fb:
+                try:
+                    save_feedback(
+                        text=str(optimized_prompt) or "",
+                        start_offset=0,
+                        end_offset=0,
+                        feedback=str(comp_fb),
+                        prompt_id=session_id
+                    )
+                except Exception as _e:
+                    print(f"[WARN] Failed to save comprehensive feedback to store: {_e}")
+
+        # 2) Optimize with feedback (uses latest feedback in the store or session)
+        improved = optimize_with_feedback(session_id)
+        print("✅ Auto feedback optimization completed.")
+        return improved
+
+    except Exception as e:
+        print(f"❌ optimize_with_auto_feedback failed: {e}")
+        return {
+            "error": str(e),
+            "session_id": session_id,
+            "result": None,
+            "metrics": None
         }
 
 def optimize_with_synthetic_feedback(session_id: str, synthetic_feedback: str) -> Dict:
@@ -375,6 +475,10 @@ def optimize_with_synthetic_feedback(session_id: str, synthetic_feedback: str) -
             # Update session with new optimized prompt if successful
             if isinstance(result.get('result'), str):
                 session.update_optimized_prompt(result['result'])
+                try:
+                    session_manager.update_session(session)
+                except Exception as _e:
+                    print(f"[WARN] Failed to persist synthetic feedback optimization for session {session_id}: {_e}")
             
             print("✅ Synthetic feedback optimization completed!")
             return result
@@ -612,10 +716,12 @@ def generate_feedback(
     model_name: str,
     model_api_key: str,
     model_api_base: str = None,
-    max_tokens: int = 1000,
-    temperature: float = 0.7,
+    max_tokens: int = 4000,
+    temperature: float = 0.3,
     synthetic_data: List[Dict] = None,
-    session_id: str = None
+    session_id: str = None,
+    per_call_timeout_seconds: int = 90,
+    max_samples: Optional[int] = None
 ) -> Dict:
     """
     Generate comprehensive feedback for an optimized prompt using synthetic data with explicit arguments.
@@ -656,17 +762,17 @@ def generate_feedback(
         openai_client = OpenAI(api_key=model_api_key, base_url=model_api_base)
         
         # Import the feedback generation functions
-        from promptomatix.core.prompts import generate_prompt_feedback_3, genrate_prompt_changes_prompt_2, generate_prompt_changes_prompt_3, generate_prompt_changes_prompt_4
+        from promptomatix.core.prompts import generate_prompt_feedback_3, genrate_prompt_changes_prompt_2, generate_prompt_changes_prompt_3, generate_prompt_changes_prompt_4, generate_prompt_feedback_prompt_only
         
         individual_feedbacks = []
         feedback_prompts = []
         
         # Process each synthetic data sample with fancy progress bar
-        print("🔄 Processing synthetic data samples...")
+        print("🔄 Processing feedback prompt...")
         
         # Create a progress bar with custom styling
         pbar = tqdm(
-            total=len(synthetic_data),
+            total=1,
             desc="🧠 Generating feedback",
             unit="sample",
             ncols=100,
@@ -675,108 +781,74 @@ def generate_feedback(
             leave=True
         )
         
-        for i, sample in enumerate(synthetic_data):
-            try:
-                # Update progress bar description with current sample info
-                pbar.set_description(f"🧠 Processing sample {i+1}/{len(synthetic_data)}")
-                
-                # Prepare user input (combine input fields)
-                user_input = ""
-                if isinstance(input_fields, (list, tuple)):
-                    user_input = " ".join([str(sample.get(field, "")) for field in input_fields])
-                else:
-                    user_input = str(sample.get(input_fields, ""))
-                
-                # Get expected output
-                expected_output = ""
-                if isinstance(output_fields, (list, tuple)):
-                    expected_output = " ".join([str(sample.get(field, "")) for field in output_fields])
-                else:
-                    expected_output = str(sample.get(output_fields, ""))
-                
-                # Generate AI system output using direct OpenAI API call instead of DSPy
-                @backoff.on_exception(
-                    backoff.expo,
-                    (APITimeoutError, InternalServerError, RateLimitError, UnprocessableEntityError),
-                    max_tries=3,
-                    max_time=60
+
+        try:
+            pbar.set_description("🧠 Generating")
+
+            feedback_prompt_only = generate_prompt_feedback_prompt_only(
+                prompts_used=optimized_prompt
+            )
+            feedback_prompts.append(feedback_prompt_only)
+
+            @backoff.on_exception(
+                backoff.expo,
+                (APITimeoutError, InternalServerError, RateLimitError, UnprocessableEntityError),
+                max_tries=3,
+                max_time=60
+            )
+            def get_openai_feedback(prompt):
+                response = openai_client.chat.completions.create(
+                    model=model_name,
+                    messages=[{"role": "user", "content": prompt}]
                 )
-                def get_ai_output(prompt):
-                    response = openai_client.chat.completions.create(
-                        model=model_name,
-                        messages=[{"role": "user", "content": prompt}]
-                    )
-                    return response.choices[0].message.content
-                
-                ai_system_output = get_ai_output(f"{optimized_prompt}\n\nInput: {user_input}")
-                
-                # Generate feedback prompt for this sample
-                feedback_prompt = generate_prompt_feedback_3(
-                    user_input=user_input,
-                    ai_system_output=ai_system_output,
-                    expected_output=expected_output,
-                    prompts_used=optimized_prompt
+                return response.choices[0].message.content
+
+            start_fb = time.time()
+            feedback_response = get_openai_feedback(feedback_prompt_only)
+            elapsed_fb = time.time() - start_fb
+            if elapsed_fb > per_call_timeout_seconds:
+                raise TimeoutError(
+                    f"Feedback model call exceeded {per_call_timeout_seconds}s "
+                    f"(took {elapsed_fb:.1f}s)"
                 )
-                
-                feedback_prompts.append(feedback_prompt)
-                
-                # Get feedback from OpenAI API with retry logic
-                @backoff.on_exception(
-                    backoff.expo,
-                    (APITimeoutError, InternalServerError, RateLimitError, UnprocessableEntityError),
-                    max_tries=3,
-                    max_time=60
-                )
-                def get_openai_feedback(prompt):
-                    response = openai_client.chat.completions.create(
-                        model="o3",
-                        messages=[{"role": "user", "content": prompt}]
-                    )
-                    return response.choices[0].message.content
-                
-                feedback_response = get_openai_feedback(feedback_prompt)
-                individual_feedbacks.append({
-                    'sample_index': i,
-                    'user_input': user_input,
-                    'expected_output': expected_output,
-                    'ai_output': ai_system_output,
-                    'feedback': feedback_response
-                })
-                
-                # Update progress bar after successful processing
-                pbar.update(1)
-                pbar.set_postfix({
-                    'Success': len(individual_feedbacks),
-                    'Failed': i + 1 - len(individual_feedbacks)
-                })
-                
-            except Exception as e:
-                # Update progress bar even on error
-                pbar.update(1)
-                pbar.set_postfix({
-                    'Success': len(individual_feedbacks),
-                    'Failed': i + 1 - len(individual_feedbacks)
-                })
-                
-                # Log error if session is available
-                if session_id:
-                    session = session_manager.get_session(session_id)
-                    if session:
-                        session.logger.add_entry("ERROR", {
-                            "error": f"Error processing sample {i}: {str(e)}",
-                            "sample": sample,
-                            "stage": "Individual Feedback Generation"
-                        })
-                continue
-        
+
+            individual_feedbacks.append({
+                "feedback": feedback_response
+            })
+
+            pbar.update(1)
+            pbar.set_postfix({
+                "Success": 1,
+                "Failed": 0
+            })
+
+        except Exception as e:
+            pbar.update(1)
+            pbar.set_postfix({
+                "Success": len(individual_feedbacks),
+                "Failed": 1 - len(individual_feedbacks)
+            })
+
+            if session_id:
+                session = session_manager.get_session(session_id)
+                if session:
+                    session.logger.add_entry("ERROR", {
+                        "error": f"Error processing sample: {str(e)}",
+                        "stage": "Individual Feedback Generation"
+                    })
+
+            if isinstance(e, TimeoutError):
+                print(f"[WARN] Timeout: {e}")
+
         pbar.close()
+
         
         if not individual_feedbacks:
             raise ValueError("No individual feedback was generated successfully")
         
         # Combine all individual feedback
         feedback_list = "\n###\n".join([
-            f"Sample {fb['sample_index'] + 1}:\nUser Input: {fb['user_input']}\nExpected: {fb['expected_output']}\nAI Output: {fb['ai_output']}\nFeedback: {fb['feedback']}"
+            f"Feedback:\n{fb['feedback']}"
             for fb in individual_feedbacks
         ])
         
@@ -790,8 +862,9 @@ def generate_feedback(
             max_time=60
         )
         def get_comprehensive_feedback(prompt):
+            # Stay consistent with the configured model to avoid provider mismatch
             response = openai_client.chat.completions.create(
-                model="gpt-4o",
+                model=model_name,
                 messages=[{"role": "user", "content": prompt}]
             )
             return response.choices[0].message.content
@@ -1017,6 +1090,14 @@ def main():
             # Run optimization with feedback
             print(f"🔄 Optimizing with feedback for session {session_id}...")
             result = optimize_with_feedback(session_id)
+            display_fancy_result(result)
+            return
+
+        # Auto generate feedback then optimize
+        if args.get('auto_generate_feedback'):
+            sid = args.get('auto_generate_feedback')
+            print(f"🔁 Auto-generating feedback and optimizing for session {sid}...")
+            result = optimize_with_auto_feedback(sid)
             display_fancy_result(result)
             return
 

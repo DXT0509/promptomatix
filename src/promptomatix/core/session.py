@@ -125,8 +125,35 @@ class SessionManager:
                 
                 # Convert string values back to enums where needed
                 config_data = session_data.get('config', {})
+                # Robustly coerce model_provider into ModelProvider enum
+                def _coerce_model_provider(val, cfg):
+                    try:
+                        if isinstance(val, ModelProvider):
+                            return val
+                        if isinstance(val, str):
+                            s = val.strip()
+                            if s.lower().startswith('modelprovider.'):
+                                s = s.split('.', 1)[1]
+                            return ModelProvider(s.lower())
+                        if isinstance(val, dict):
+                            for k in ('value', 'name'):
+                                v = val.get(k)
+                                if isinstance(v, str):
+                                    s = v.strip()
+                                    if s.lower().startswith('modelprovider.'):
+                                        s = s.split('.', 1)[1]
+                                    return ModelProvider(s.lower())
+                        # Fallback inference by api base
+                        base = cfg.get('model_api_base') if isinstance(cfg, dict) else None
+                        if isinstance(base, str) and 'openrouter' in base.lower():
+                            return ModelProvider.OPENROUTER
+                        return ModelProvider.OPENAI
+                    except Exception:
+                        # Last resort default
+                        return ModelProvider.OPENAI
+
                 if 'model_provider' in config_data:
-                    config_data['model_provider'] = ModelProvider(config_data['model_provider'])
+                    config_data['model_provider'] = _coerce_model_provider(config_data['model_provider'], config_data)
                 
                 config = Config(**config_data)
                 session = OptimizationSession(
@@ -165,6 +192,10 @@ class SessionManager:
         
         # Handle nested objects in config
         for key, value in config_dict.items():
+            # Special-case Enums to store their value for stable reloads
+            if isinstance(value, Enum):
+                config_dict[key] = value.value
+                continue
             if isinstance(value, (str, int, float, bool, list, dict, type(None))):
                 # Handle basic types directly
                 continue
