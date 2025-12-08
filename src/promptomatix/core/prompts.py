@@ -3097,7 +3097,106 @@ ENHANCED PROMPT OUTPUT:"""
 
     return meta_prompt_template.format(input_prompt=initial_prompt)
 
+def generate_meta_prompt_6(initial_prompt):
+    """
+    Return a meta‑prompt that instructs a downstream optimizer to improve the
+    given `initial_prompt` while strictly preserving immutable schema blocks.
+    """
+    meta_prompt_template = """
+You are a senior prompt‑engineer. Your task is to enhance the given **input prompt** by breaking it down into components, optimizing each component independently, and then producing an improved version of the entire prompt.
 
+## NON‑NEGOTIABLE CONTENT‑PRESERVATION
+- Do NOT remove, shorten, or merge any bucket unless it is provably redundant.
+- Every directive, parameter list, tool description, rule, and example in the input **must remain** in the optimized output (re‑phrased is fine; omitted is not).
+- If restitution would exceed the token limit, split into numbered continuation blocks rather than dropping content.
+- Re‑phrase sentences for clarity, fix grammar, and deduplicate wordy phrasing **only inside the same section.**  
+  *Do not delete, merge, or relocate content across buckets.*
+
+## HERE IS THE INPUT PROMPT YOU NEED TO OPTIMIZE:
+<input_prompt>
+{input_prompt}
+</input_prompt>
+
+## FOLLOW THESE STEPS TO PRODUCE THE FINAL OPTIMIZED PROMPT:
+1. Analyze the input prompt:
+   - If the prompt is < 280 characters AND has no fenced blocks, optimize in‑place and return the result. Skip the remaining steps.
+   - Otherwise, continue with the steps below.
+
+2. Identify sections:
+   - Break the input into logical sections (instructions, rules, metadata, etc.).
+   - Place every line into exactly one section (“bucket”).
+
+3. Understand purpose and placement:
+   - For each bucket, define its purpose.
+   - Decide the best order for buckets in the optimized prompt.
+
+4. Propose optimization objectives:
+   - Set success criteria for each bucket.
+   - Examples:
+     - **Instructions:** rephrase for clarity, remove redundancy.
+     - **Tools/Functions:** keep exact structure, improve only descriptive text.
+
+5. Optimize each section:
+   - Apply the objectives without losing intent.
+
+6. Construct the final prompt:
+   - Assemble optimized buckets.
+   - Keep original data formats (JSON, YAML, plain text, etc.).
+   - Only output that block—no extra commentary.
+   - Keep all intermediate reasoning completely internal; do NOT expose it in the output.
+   - The output MUST begin immediately with the fully‑optimized prompt – no preamble, no titles, no explanations. 
+
+7. Review and finalize:
+   - Verify nothing critical was lost.
+   - Prioritize completeness over brevity where necessary.
+
+## PRESENT THE RESULT IN THE FOLLOWING FORMAT:
+<optimized_prompt>{{optimized_prompt}}</optimized_prompt>
+(No other text or commentary. Any deviation triggers `ERROR: format violation`.)
+
+
+## IMMUTABLE SCHEMA BLOCKS
+Any contiguous block that defines a machine-readable interface—functions, tools, APIs, database tables, config schemas, etc.—is **immutable**.
+
+**Identification**
+- Wrap every immutable block in a fence:
+  ```SCHEMA
+  …schema text…
+  ```
+  (Use one consistent tag in place of “SCHEMA”.)
+
+**Allowed edits inside an immutable block**
+1. Must modify *only* descriptive text:
+   - Values of `description`, `summary`, `comment`, or `notes`.
+   - Stand‑alone comment lines (`#`, `//`, `<!-- … -->`).
+
+### DESCRIPTION ENHANCEMENT WITHIN IMMUTABLE BLOCKS
+Rewriting the text of every `description`, `summary`, `comment`, or `notes` value is **required**, not optional.
+
+When updating a description value:
+1. Keep semantic intent 100% intact—do **not** add new parameters or omit existing constraints.
+2. Start with a strong, active verb (“Returns…”, “Creates…”, “Stores…”).
+3. Mention key constraints in brackets, e.g., `(maxLength: 255)`.
+4. Use ≤ 25 words per sentence; break long explanations into bullets if needed.
+5. Remove fluff (“simply”, “basically”, “so that you can”).
+6. Use domain-neutral English unless the field is clearly domain-specific.
+
+Only the literal string value may change; all surrounding punctuation, quotes, indentation, and keys stay byte-for-byte the same.
+   
+**Forbidden edits**
+- Add, delete, re‑order, or re‑indent any structural tokens.
+- Change field names, types, defaults, constraints, regex patterns, or metadata.
+- Deduplicate or expand `$defs`, `unevaluatedProperties`, etc.
+- Convert formats (e.g., JSON ↔ YAML) or change casing.
+
+**Validation (mandatory)**
+For each fenced block:
+1. Compute its SHA‑256 hash before and after editing, ignoring only characters changed in allowed descriptive fields.
+2. If hashes differ elsewhere, abort and raise an error.
+
+Non‑compliance is a hard failure. Surrounding narrative and examples may be optimized freely.
+"""
+    return meta_prompt_template.format(input_prompt=initial_prompt)
 
 def generate_meta_prompt_7(initial_prompt, examples=None):
   """
@@ -3203,9 +3302,9 @@ Your goal is to detect even subtle flaws and avoid inflated scores.
 Evaluate the AI response against the original prompt on these aspects:
 
 - relevance: Absolute focus on the task. Deduct points for ANY unnecessary content, emotional padding, or deviation.
-- accuracy: Strict adherence to instructions. Deduct points for minor grammar issues, vague wording, or soft interpretation.
+- accuracy: Measures correctness of interpretation and information. Deduct points for misinterpreting the prompt, providing incorrect or distorted information, missing required instructions, or violating required formatting/structure.
 - consistency: Judge if this quality would remain unchanged across multiple similar cases. Penalize stylistic instability.
-- readability_coherence: Deduct points for overlong sentences, redundancy, filler phrases, or weak logical flow.
+- readability_coherence: Assess clarity, grammar, and logical flow. Deduct points for grammar errors, unclear or tangled sentences, weak logical flow, redundancy, or filler phrases.
 - efficiency: Penalize ANY verbosity, over-explanation, or content not strictly needed to fulfill the task.
 SCORING RULES (STRICT):
 

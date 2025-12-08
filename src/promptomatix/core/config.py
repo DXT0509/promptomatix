@@ -1585,8 +1585,8 @@ class Config:
         """Load datasets from local CSV files."""
         import pandas as pd
         
-        train_df = pd.read_csv(self.local_train_data_path)
-        test_df = pd.read_csv(self.local_test_data_path)
+        train_df = pd.read_csv(self.local_train_data_path,encoding="latin-1")
+        test_df = pd.read_csv(self.local_test_data_path,encoding="latin-1" )
         
         return Dataset.from_pandas(train_df), Dataset.from_pandas(test_df)
 
@@ -1856,7 +1856,7 @@ class Config:
                 self._calculate_dataset_sizes()
             
             # Load training data with size restriction
-            train_df = pd.read_csv(self.local_train_data_path)
+            train_df = pd.read_csv(self.local_train_data_path,encoding="latin-1")
             if self.train_data_size and len(train_df) > self.train_data_size:
                 train_df = train_df.head(self.train_data_size)
                 logger.info(f"Restricted training data to {self.train_data_size} samples")
@@ -1867,7 +1867,7 @@ class Config:
             # Load test/validation data if path provided
             if self.local_test_data_path:
                 logger.info(f"Loading test data from: {self.local_test_data_path}")
-                test_df = pd.read_csv(self.local_test_data_path)
+                test_df = pd.read_csv(self.local_test_data_path,encoding="latin-1")
                 if self.valid_data_size and len(test_df) > self.valid_data_size:
                     test_df = test_df.head(self.valid_data_size)
                     logger.info(f"Restricted validation data to {self.valid_data_size} samples")

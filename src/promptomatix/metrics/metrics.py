@@ -14,7 +14,7 @@ from ..core.config import LambdaPenalty  # Fix the import path
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import cos_sim
 import torch
-
+from bert_score import score as bert_score_original
 # Set environment variables to suppress warnings
 os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
@@ -41,7 +41,14 @@ def suppress_stderr():
 # Replace BERTScore with SentenceTransformer cosine similarity to reduce heavy model downloads
 # and unify all metric calls. We mimic the BERTScore API by returning (P,R,F1) tensors, all equal
 # to the cosine similarity scores.
-
+def bert_score_silent(*args, **kwargs):
+    """BERTScore wrapper that suppresses all stderr output."""
+    with suppress_stderr():
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            return bert_score_original(*args, **kwargs)
+        
+#bert_score_metric = bert_score_silent
 _st_model = SentenceTransformer("all-mpnet-base-v2")
 
 def bert_score_metric(cands: List[str], refs: List[str], **kwargs):
@@ -771,12 +778,10 @@ class MetricsManager:
             response_similarity = float(F1.mean())
             
             # Evaluate coherence using reference to well-formed response
-            coherent_ref = "This is a coherent, contextually appropriate, and well-structured response."
-            _, _, coherence = bert_score_metric([pred_response], [coherent_ref], lang="en", rescale_with_baseline=False)
-            coherence_score = float(coherence.mean())
+            
             
             # Combine metrics
-            score = (response_similarity + coherence_score) / 2
+            score = response_similarity 
             
             # Apply length penalty
             prompt_length = len(instructions.split()) if instructions else 0
@@ -1270,7 +1275,7 @@ class MetricsManager:
             response_similarity = float(F1.mean())
       
             
-            return (response_similarity + coherence_score) / 2
+            return response_similarity
         except Exception as e:
             print(f"Error in conversation metrics: {str(e)}")
             return 0.0

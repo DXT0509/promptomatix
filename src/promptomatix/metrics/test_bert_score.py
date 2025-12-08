@@ -4,10 +4,32 @@ from typing import List
 from sentence_transformers.util import cos_sim
 import os
 from dotenv import load_dotenv
-
+from bert_score import score as bert_score_original
+import warnings
+import sys
 _st_model = SentenceTransformer("all-mpnet-base-v2")
+from contextlib import contextmanager
+@contextmanager
+def suppress_stderr():
+    """Context manager to suppress stderr output."""
+    with open(os.devnull, 'w') as devnull:
+        old_stderr = sys.stderr
+        sys.stderr = devnull
+        try:
+            yield
+        finally:
+            sys.stderr = old_stderr
 
-def bert_score_metric(cands: List[str], refs: List[str], **kwargs):
+def bert_score_silent(*args, **kwargs):
+    """BERTScore wrapper that suppresses all stderr output."""
+    with suppress_stderr():
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            return bert_score_original(*args, **kwargs)
+        
+bert_score_metric = bert_score_silent
+
+def bert_score_metric1(cands: List[str], refs: List[str], **kwargs):
     """SentenceTransformer similarity wrapper mimicking BERTScore output signature.
     Returns (P,R,F1) tensors all equal to cosine similarity scores.
     Broadcasting: if lengths differ and one list has length 1, broadcast that element.
@@ -39,10 +61,10 @@ def bert_score_metric(cands: List[str], refs: List[str], **kwargs):
 
 
 # ===== TEST THỰC TẾ =====
-pred_answer = ["Hurry up, the school is being closed"]
-gold_answer = ["Quickly, the class is nearly starting"]
+pred_answer = 'The quick brown fox jumps over the lazy dog'
+gold_answer = 'A brown fox quickly jumps over a lazy dog'
 load_dotenv()  # bắt buộc
 
-P, R, F1 = bert_score_metric(pred_answer, gold_answer, lang="en", rescale_with_baseline=False)
-print("Score:", float(F1[0]), "\n")
-print(os.environ.get("JUDGE_API_KEY"))
+
+P, R, F1 = bert_score_metric1(pred_answer, gold_answer)
+print("Score:", float(F1.mean()), "\n")

@@ -13,6 +13,7 @@ import nltk
 import os
 import logging
 from pathlib import Path
+from pathlib import Path
 import requests
 
 from ..utils.parsing import parse_dict_strings
@@ -24,6 +25,7 @@ from .prompts import (
     generate_synthetic_data_prompt, 
     generate_synthetic_data_validation_prompt,
     generate_meta_prompt,
+    generate_meta_prompt_6,
     generate_meta_prompt_7,
     validate_synthetic_data,
     generate_meta_prompt_2,
@@ -33,6 +35,8 @@ from .prompts import (
 
 # Setup module logger
 logger = logging.getLogger(__name__)
+# Directory for optimizer logs (JSONL). Falls back to project-relative path.
+OPTIMIZER_LOGS_DIR = Path("logs/optimizer")
 
 class PromptOptimizer:
     """
@@ -220,10 +224,8 @@ class PromptOptimizer:
                                     batch_size - len(valid_batch_data),
                                     feedback_section
                                 )
-                                print("DEBUGSYNTHETIC: ", prompt)
                                 response = tmp_lm(prompt)[0]
                                 response = self._clean_llm_response(response)
-                                
                                 try:
                                     batch_data = json.loads(response)
                                     print(f"\n📝 Generated {len(batch_data)} samples from LLM:")
@@ -496,8 +498,12 @@ class PromptOptimizer:
                 ))
             else:
                 evaluator = Evaluate(devset=validset_full, metric=eval_metrics)
-            initial_score, initial_results = evaluator(program=program, return_outputs=True)
-            print(f"✓ Initial score: {initial_score:.4f}")
+            initial_score = evaluator(program=program)
+            try:
+                _init_score_val = getattr(initial_score, 'score', initial_score)
+                print(f"✓ Initial score: {float(_init_score_val):.4f}")
+            except Exception:
+                print(f"✓ Initial score: {initial_score}")
             
             # Compile optimized program
             print("Compiling optimized program (this may take a while)...")
@@ -507,14 +513,18 @@ class PromptOptimizer:
             # Evaluate optimized prompt
             print("Evaluating optimized prompt...")
             if provider.lower() == 'openrouter':
-                optimized_score, optimized_results = evaluator(
-                    program=compiled_program, return_outputs=True
+                optimized_score = evaluator(
+                    program=compiled_program
                 )
             else:
-                optimized_score, optimized_results = evaluator(
-                    program=compiled_program, return_outputs=True
+                optimized_score = evaluator(
+                    program=compiled_program
                 )
-            print(f"✓ Optimized score: {optimized_score:.4f}")
+            try:
+                _opt_score_val = getattr(optimized_score, 'score', optimized_score)
+                print(f"✓ Optimized score: {float(_opt_score_val):.4f}")
+            except Exception:
+                print(f"✓ Optimized score: {optimized_score}")
             
             try:
                 opt_instructions = compiled_program.signature.instructions
@@ -601,13 +611,11 @@ class PromptOptimizer:
                         return response.choices[0].message.content
                     self._call_llm_api_directly = call_llm
             else :
-                self.config.raw_input = y;
-                
+                self.config.raw_input = y
+            
             initial_score = self._evaluate_prompt_meta_backend(self.config.raw_input)
             
-
             print(f"  Initial score: {initial_score:.4f}")
-            
             # Generate meta-prompt using the function from prompts.py
             # Prefer examples from a local CSV specified by `local_train_data_path`.
             # If not found, fall back to any `self.config.train_data` already loaded.
@@ -624,7 +632,7 @@ class PromptOptimizer:
                         except Exception:
                             # pandas unavailable or failed; fallback to csv module
                             import csv as _csv
-                            with open(p, 'r', encoding='utf-8') as _f:
+                            with open(p, 'r', encoding="latin-1") as _f:
                                 reader = _csv.DictReader(_f)
                                 examples = [row for row in reader]
 
@@ -651,6 +659,7 @@ class PromptOptimizer:
             # Allow skipping this behavior via config flag `skip_meta_generation` for debugging or
             # when you explicitly want to keep the original prompt.
             optimized_prompt = x
+            print("DEBUGMETAPROMPT7: ", meta_prompt)
             if (initial_flag == False):
                 
                 optimized_prompt = self._call_llm_api_directly(meta_prompt, self.config.model_name)
@@ -688,11 +697,14 @@ class PromptOptimizer:
         try:
             # Debug: show which optimizer file is being executed to detect site-packages vs local src
             # 1) Create meta-prompt from the initial input
+            x= self.config.raw_input
+            y= self.config.original_raw_input
+            
             meta_prompt = generate_meta_prompt_7(self.config.raw_input)
 
             # 2) Call LLM to get the optimized prompt (model from config)
             optimized_prompt_raw = self._call_llm_api_directly(meta_prompt, self.config.model_name)
-
+            self.config.raw_input = y
             # 3) Extract final optimized prompt text if wrapped in <optimized_prompt> tags
             optimized_prompt_text = optimized_prompt_raw.strip()
             try:
@@ -707,6 +719,8 @@ class PromptOptimizer:
                 pass
 
             # 4) Get responses for both the initial prompt and the optimized prompt
+            print("DEBUGINITIALPROMPT: ", self.config.raw_input)
+            print("DEBUGOPTIMIZED PROMPT: ", optimized_prompt_text)
             initial_response = self._call_llm_api_directly(self.config.raw_input)
             optimized_response = self._call_llm_api_directly(optimized_prompt_text)
             print("DEBUG: Initial response:", initial_response)
@@ -715,17 +729,26 @@ class PromptOptimizer:
             def _safe_average_score(metrics_json: Dict) -> float:
                 if not isinstance(metrics_json, dict):
                     return 0.0
-                keys = ["relevance", "accuracy", "consistency", "readability_coherence", "efficiency"]
-                values = []
-                for k in keys:
+
+                weights = {
+                    "relevance": 0.30,
+                    "accuracy": 0.30,
+                    "consistency": 0.10,
+                    "readability_coherence": 0.15,
+                    "efficiency": 0.15,
+                }
+
+                total = 0.0
+                for k, w in weights.items():
                     v = metrics_json.get(k)
                     try:
                         v = float(v)
                     except (TypeError, ValueError):
                         v = None
                     if v is not None:
-                        values.append(v)
-                return sum(values) / len(values) if values else 0.0
+                        total += v * w
+
+                return total
 
             def _evaluate_pair(prompt_text: str, answer_text: str) -> Tuple[float, Dict]:
                 try:                   
@@ -759,7 +782,14 @@ class PromptOptimizer:
             print("📊 Evaluating optimized prompt response...")
             optimized_score, optimized_metrics_json = _evaluate_pair(self.config.raw_input, optimized_response)
             print(f"  Optimized evaluation score: {optimized_score:.4f}")
-
+            if optimized_score < 0.5:
+                meta_prompt = generate_meta_prompt_6(self.config.raw_input)
+                optimized_prompt_raw = self._call_llm_api_directly(meta_prompt, self.config.model_name)
+                optimized_prompt_text = optimized_prompt_raw.strip()
+                optimized_response = self._call_llm_api_directly(optimized_prompt_text)
+                print("DEBUGOPTIMIZED RESPONSE RETRY: ", optimized_response)
+                optimized_score, optimized_metrics_json = _evaluate_pair(self.config.raw_input, optimized_response)
+                print(f"  Re-evaluated optimized score: {optimized_score:.4f}")
             print("DXT: ", initial_metrics_json, "\n", optimized_metrics_json)
             # 6) Prepare result with computed scores
             result = self._prepare_results(
@@ -1102,8 +1132,16 @@ class PromptOptimizer:
             
             # Calculate cost (approximate)
             # OpenAI pricing varies by model, this is a rough estimate
-            input_tokens = len(prompt.split()) * 1.3  # Rough token estimation
-            output_tokens = len(response_text.split()) * 1.3
+            try:
+                prompt_str = prompt if isinstance(prompt, str) else str(prompt)
+                input_tokens = len(prompt_str.split()) * 1.3  # Rough token estimation
+            except Exception:
+                input_tokens = 0
+            try:
+                resp_str = response_text if isinstance(response_text, str) else str(response_text)
+                output_tokens = len(resp_str.split()) * 1.3
+            except Exception:
+                output_tokens = 0
             
             # Estimate cost (this would need to be updated with actual pricing)
             estimated_cost = (input_tokens * 0.00001) + (output_tokens * 0.00003)  # Rough estimate
@@ -1151,8 +1189,16 @@ class PromptOptimizer:
             
             # Calculate cost (approximate)
             # Anthropic pricing varies by model, this is a rough estimate
-            input_tokens = len(prompt.split()) * 1.3  # Rough token estimation
-            output_tokens = len(response_text.split()) * 1.3
+            try:
+                prompt_str = prompt if isinstance(prompt, str) else str(prompt)
+                input_tokens = len(prompt_str.split()) * 1.3  # Rough token estimation
+            except Exception:
+                input_tokens = 0
+            try:
+                resp_str = response_text if isinstance(response_text, str) else str(response_text)
+                output_tokens = len(resp_str.split()) * 1.3
+            except Exception:
+                output_tokens = 0
             
             # Estimate cost (this would need to be updated with actual pricing)
             estimated_cost = (input_tokens * 0.000015) + (output_tokens * 0.000075)  # Rough estimate

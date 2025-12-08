@@ -186,6 +186,8 @@ def optimize_with_feedback(session_id: str) -> Dict:
         task_type=session.config.task_type,
         model_name=session.config.model_name,
         model_provider=session.config.model_provider,
+        judge_model_name=session.config.judge_model_name,
+        judge_model_provider=session.config.judge_model_provider,
         model_api_key=session.config.model_api_key,
         model_api_base=session.config.model_api_base,
         dspy_module=session.config.dspy_module,
@@ -296,7 +298,6 @@ def optimize_with_auto_feedback(session_id: str) -> Dict:
             raise ValueError(f"Session {session_id} not found")
             # Collect essentials from session
         optimized_prompt = getattr(session, "latest_optimized_prompt", None)
-        print(f"DEBUGDXT: {optimized_prompt}")
         if not optimized_prompt:
             raise ValueError("No optimized prompt found in this session. Run initial optimization first.")
 
