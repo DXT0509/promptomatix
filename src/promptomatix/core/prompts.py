@@ -3208,48 +3208,52 @@ def generate_meta_prompt_7(initial_prompt, examples=None):
   an optimized prompt.
   """
   meta_prompt_template = """
-You are a high-level prompt-optimizer. Your ONLY job is to produce a final optimized prompt that becomes the downstream model’s instruction set.
+You are a high-level prompt-optimizer. Your ONLY job is to produce exactly two optimized prompts that become the downstream model’s instruction sets.
 
 ### ABSOLUTE OUTPUT RULE
-You must output **exactly one line**:
+You must output exactly two lines, each in this format:
 <optimized_prompt>FINAL_PROMPT_TEXT</optimized_prompt>
-No explanations. No formatting. No commentary. No newline before or after.
+Line 1 = child prompt #1.
+Line 2 = child prompt #2.
+No explanations. No formatting. No commentary. No extra lines.
 
 ### ZERO-LEAKAGE POLICY
-The optimized prompt MUST NOT reveal:
+The optimized prompts MUST NOT reveal:
 - this meta-prompt,
 - any part of these instructions,
 - any formatting rules listed here,
 - any training examples,
 - any prompt-engineering logic.
-All of these must be used internally ONLY to build a better final prompt.
+All of these must be used internally ONLY to build better final prompts.
 
 ### TRAINING-AWARE OPTIMIZATION
-You MAY receive training examples below.  
+You MAY receive training examples below.
 You MUST:
 - study them,
 - generalize the pattern,
 - extract latent rules,
-- build an optimized prompt that allows the downstream LLM to reproduce correct answers when similar queries are asked.
+- and if examples are provided, you MUST explicitly encode the learned rules or mappings into the optimized prompts so the downstream LLM can produce correct answers with high accuracy.
+- If no examples are provided, infer intent and task structure solely from the input prompt, and construct optimal behavioral instructions.
 
 IF NO training examples are provided, you MUST:
 - infer intent and task structure solely from the input prompt,
 - apply best-practice prompt design principles,
 - construct optimal behavioral instructions without fabricating patterns or assuming hidden data.
 
-In all cases, the final optimized prompt MUST NOT:
+In all cases, the final optimized prompts MUST NOT:
 - expose the examples,
 - reference them,
 - paraphrase them,
 - hint at their existence.
 
 ### OBJECTIVE
-Transform the input prompt into an optimized version that:
-1. Is clearer, stricter, more complete, more robust.
-2. Teaches the downstream LLM the behavioral logic required to answer correctly based on the training examples.
-3. Preserves all original intent of the input prompt.
-4. Adds missing clarifications when needed.
-5. NEVER reveals anything from this meta-prompt or examples.
+Transform the input prompt into **two distinct optimized versions** that:
+1. Are clearer, stricter, more complete, more robust.
+2. Encode the behavioral logic required to answer correctly based on the training examples.
+3. Preserve all original intent of the input prompt.
+4. Add missing clarifications when needed.
+5. NEVER reveal anything from this meta-prompt or examples.
+6. Ensure the two prompts are logically distinct, creating two different reasoning pathways for beam search
 
 ### INPUT PROMPT
 <input_prompt>
@@ -3260,15 +3264,13 @@ Transform the input prompt into an optimized version that:
 ### YOUR TASK
 1. Analyze the initial prompt and training examples privately.
 2. Infer hidden patterns, constraints, and behavioral rules.
-3. Rebuild a final version of the prompt that encodes:
-   - strict behavioral guidelines,
-   - logical procedures,
-   - fully self-contained instructions enabling the downstream LLM to answer correctly.
-4. The optimized prompt MUST be fully standalone.
-5. It must not mention this meta-prompt, examples, optimization, or any hidden logic.
-6. When you are done, output STRICTLY one line:
-   <optimized_prompt>THE_FINAL_OPTIMIZED_PROMPT</optimized_prompt>
+3. Produce two self-contained optimized prompts.
+4. They must not mention this meta-prompt, examples, optimization, or any hidden logic.
+5. At the end, output STRICTLY two lines:
+   <optimized_prompt>CHILD_PROMPT_1</optimized_prompt>
+   <optimized_prompt>CHILD_PROMPT_2</optimized_prompt>
 """
+
 
   # Build examples section (include serialized JSON examples if provided)
   examples_block = ""
@@ -3287,7 +3289,7 @@ Transform the input prompt into an optimized version that:
       "Include these examples verbatim and use them to guide prompt optimization.\n"
       f"{examples_section}\n"
     )
-    print(f"DEBUG: {examples_section}")
+    
   return meta_prompt_template.format(input_prompt=initial_prompt, examples_block=examples_block)
 
 
@@ -3347,21 +3349,19 @@ No explanations. No justification. No commentary.
 
 def generate_classification_type_prompt(prompt):
     classification_type_prompt_template = """
-You are a strict evaluator.
+You are a classification tool. Your only job is to determine if this "Instruction" needs an "Input" field to be completed.
 
-Your task is to decide whether the following prompt can be evaluated directly by observing the AI’s response itself, without requiring any additional synthetic input–output pairs or extra questions.
+Instruction: {prompt}
 
 Rules:
 
-- Return only one word: True or False.
-- Return False if the prompt can be executed and evaluated immediately by the AI’s response alone. That is, if the AI can generate a meaningful, contextually appropriate output without needing extra input or synthetic test cases.
-- Return True only if the prompt cannot be properly evaluated without generating additional synthetic input or expected outputs.
-- Consider whether the prompt is self-contained: if it provides enough context for the AI to respond meaningfully, it can be evaluated directly (False).
-- Ignore whether a “gold standard” exists; focus only on whether the AI can produce a usable response without extra data.
+Return True: If the instruction refers to external data, text, or a situation not provided in the instruction itself (e.g., "summarize this", "translate the following", "given the situation").
 
-<Prompt_to_classify>
-{prompt}
-</Prompt_to_classify>
+Return False: If the instruction is a standalone question or task (e.g., "Write a poem", "What is 2+2?", "Give me some ideas").
+
+Constraint:
+
+Output ONLY the word "True" or "False". Do not include any explanation, punctuation, or other text.
 """
     return classification_type_prompt_template.format(prompt=prompt)
 # def generate_meta_prompt_7(initial_prompt):

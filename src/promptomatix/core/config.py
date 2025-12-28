@@ -304,10 +304,11 @@ class Config:
         self.model_api_key = kwargs.get('model_api_key')
         self.model_api_base = kwargs.get('model_api_base')
         self.model_provider = kwargs.get('model_provider')
-        self.temperature = kwargs.get('temperature', 0.3)  # Default temperature (deterministic)
-        self.max_tokens = kwargs.get('max_tokens', 8000)  # Default max tokens
-        self.config_max_tokens = kwargs.get('config_max_tokens', 8000)  # Default max tokens
-        self.config_temperature = kwargs.get('config_temperature', 0.3)
+        self.top_p = kwargs.get('top_p', 0.1)  # Default top_p
+        self.temperature = kwargs.get('temperature', 0.0)  # Default temperature (deterministic)
+        self.max_tokens = kwargs.get('max_tokens', 4000)  # Default max tokens
+        self.config_max_tokens = kwargs.get('config_max_tokens', 4000)  # Default max tokens
+        self.config_temperature = kwargs.get('config_temperature', 0.0)
         self.config_model_name = kwargs.get('config_model_name')
         self.config_model_provider = kwargs.get('config_model_provider')
         self.config_model_api_key = kwargs.get('config_model_api_key')

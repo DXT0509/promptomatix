@@ -41,14 +41,7 @@ def suppress_stderr():
 # Replace BERTScore with SentenceTransformer cosine similarity to reduce heavy model downloads
 # and unify all metric calls. We mimic the BERTScore API by returning (P,R,F1) tensors, all equal
 # to the cosine similarity scores.
-def bert_score_silent(*args, **kwargs):
-    """BERTScore wrapper that suppresses all stderr output."""
-    with suppress_stderr():
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            return bert_score_original(*args, **kwargs)
-        
-#bert_score_metric = bert_score_silent
+
 _st_model = SentenceTransformer("all-mpnet-base-v2")
 
 def bert_score_metric(cands: List[str], refs: List[str], **kwargs):

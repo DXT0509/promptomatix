@@ -61,8 +61,8 @@ def bert_score_metric1(cands: List[str], refs: List[str], **kwargs):
 
 
 # ===== TEST THỰC TẾ =====
-pred_answer = 'The quick brown fox jumps over the lazy dog'
-gold_answer = 'A brown fox quickly jumps over a lazy dog'
+pred_answer = 'A man is smoking.'
+gold_answer = 'A man is skating.'
 load_dotenv()  # bắt buộc
 
 

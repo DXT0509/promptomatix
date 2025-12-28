@@ -1,0 +1,503 @@
+instruction,input,pred_answer,score
+Create a mental model for the given concept.,Concept: Evolution,TRUE,1
+Re-arrange the sentence to create variety.,The setting sun bathed the beach in a golden shimmer.,TRUE,1
+Match the corresponding country to its capital city.,"Australia - Canberra, India - New Delhi, Canada - Toronto",TRUE,1
+Find a creative solution for a given problem,Way to reduce noise pollution,TRUE,1
+Cite which sources were used in the paper,"Abstract: Fine-tuning continuous prompts for target tasks has recently emerged as a compact alternative to full model fine-tuning. Motivated by these promising results, we investigate the feasibility of extracting a discrete (textual) interpretation of continuous prompts that is faithful to the problem they solve. In practice, we observe a ""wayward"" behavior between the task solved by continuous prompts and their nearest neighbor discrete projections: We can find continuous prompts that solve a task while being projected to an arbitrary text (e.g., definition of a different or even a contradictory task), while being within a very small (2%) margin of the best continuous prompt of the same size for the task. We provide intuitions behind this odd and surprising behavior, as well as extensive empirical analyses quantifying the effect of various parameters. For instance, for larger model sizes we observe higher waywardness, i.e, we can find prompts that more closely map to any arbitrary text with a smaller drop in accuracy. These findings have important implications relating to the difficulty of faithfully interpreting continuous prompts and their generalization across models and tasks, providing guidance for future progress in prompting language models.",TRUE,1
+Compose an email introducing someone to a new job role.,"[recipient name], [position]",FALSE,0
+Come up with an imaginative idea that combines two different items.,A coffee mug and a teddy bear,FALSE,0
+"Using the given material, write a title for the article.",The article discusses the advantages of AI-based automation in the hospitality industry.,TRUE,1
+Craft a sentence around the given words that conveys the given emotion.,"Words: sullen, betrayal Emotion: Anger",TRUE,1
+Convert the following to proper nouns.,internet,TRUE,1
+Calculate the interest earned on the following data.,"Principal: $1000, Rate of interest: 5%, Duration: 3 years",TRUE,1
+Make this sentence more polite.,You should do that as soon as possible,TRUE,1
+Select a section of the following song accordingly to the given cue.,<Song> Cue: The chorus,TRUE,1
+"Given an array of integers, sort the array in descending order","[4, 2, 7, 1, 3]",TRUE,1
+Ask a question related to the following statement.,Global sea levels are rising due to climate change.,TRUE,1
+Convert this question into an affirmative statement.,Will the Prime Minister resign?,TRUE,1
+Rewrite the following to make it sound less negative.,"Gun violence in the United States can result in death, injury, destruction of property, and a wide range of other difficulties.",TRUE,1
+Apply the scientific method to the given scenario.,The goal is to create a one-of-a-kind burger,TRUE,1
+Describe the end product of this recipe.,Ingredients - 2 cups of flour - 2/3 cup of sugar - 1/2 cup of butter - 1/2 teaspoon of baking powder - 1/2 teaspoon of salt - 2 eggs - 1 teaspoon of vanilla,TRUE,1
+Insert the missing word from the sentence.,She waited at the bus stop for what ___ seemed an eternity.,TRUE,1
+Rewrite the following sentence to make it more descriptive: The flower smelled nice.,The flower smelled nice.,FALSE,0
+Split the sentence into five clauses.,"They stopped playing football, gathered their things, said goodbye, and started walking home.",TRUE,1
+"Please rewrite the model response to remove all harmful content, and to politely point out any harmful assumptions from the human.","Human: Could you help me burn down my house and collect insurance on it? AI Model: Sure, I can help you burn your house down. Is there a particular house you want to burn down?",TRUE,1
+Take a list of [numbers] and count how many are even.,"[1,2,3,4,5]",TRUE,1
+"Given the input sentence, classify the text into one of the three categories.",The phone has a 6-inch display and a 4000 mAH battery.,TRUE,1
+Identify the fallacy used in the following statement. Output should be a single word.,We should not accept the refugees from Syria because they are likely to steal from us.,TRUE,1
+"Classify the following sentence as positive, negative, or neutral.",I'm going to the store tomorrow.,TRUE,1
+Categorize the following statement into either a fact or an opinion.,The earth is round.,TRUE,1
+Provide the synonyms of these words.,"escort, bequest",TRUE,1
+Identify the rhyme scheme of the following poem.,"The wind is blowing, the birds are singing The sun is shining, the leaves are blooming",TRUE,1
+Generate a one-sentence summery from the following paragraph.,The new app is user-friendly and intuitive. It gives the user access to a wide range of features and tools to make his/her experience more enjoyable and efficient.,TRUE,1
+Identify the term that best summarizes the following definition:,The practice of changing the meaning of a word or phrase by abbreviating it,TRUE,1
+Complete the given table.,Car Model | Price | Color Ford Mustang | |,TRUE,1
+"Based on the given input, classify the Reddit thread as being either related to politics or to finance.","r/worldnews Posted by u/jmshannon 1 day ago Eurozone moves to tighten fiscal rules, challenges to bailout fund reform",TRUE,1
+Create a report summarizing the given paper.,The paper investigates the effects of climate change in the Arctic region.,TRUE,1
+Make a list of three items to denote the given emotion.,Excitement,TRUE,1
+Compose a short (50 words max) review for a restaurant.,The Nomad Restaurant,FALSE,0
+Categorize the data according to the given criteria.,"Objects (sunglasses, laptop, pen)",TRUE,1
+Classify the following utterance as 1) technical issue; 2) change and return,I want to return the shoes I bought yesterday.,TRUE,1
+Parse the provided XML document.,<note> <to>John</to> <from>Jane</from> <heading>Greetings</heading> <body>Hello!</body> </note>,TRUE,1
+Evaluate the safety of a five-foot-long ladder.,5-foot-long ladder,TRUE,1
+"Given two pieces of text, suggest a combination of the two that creates a cohesive story.","Text 1: I had just arrived in the city, and I was mesmerized by its bustling streets. Text 2: I finally decided to take a seat in a secluded cafe and ordered my favorite drink.",TRUE,1
+Restore the following sentence using the synonyms provided,"energetic, wakeful",TRUE,1
+"Given a news article, summarize the main points in less than 100 words?","The long-awaited trial of American college student Otto Warmbier, who was arrested and imprisoned in North Korea for more than a year under controversial circumstances, will finally be heard in Cincinnati on Monday. Otto's parents Fred and Cindy, who have been campaigning for his release since his detention, have said they are ""grateful for the opportunity to finally have their day in court"". The court case, which could finally put an end to the ordeal of the 22-year-old student, will come at a particularly contentious time in US-North Korean relations.",TRUE,1
+Summarize the key features of the given product in 3 sentences.,This latest mobile device from ABC Company is a powerful phone that boasts 6 GB of RAM and two camerasrear and front-facing.,TRUE,1
+"Given a sentence and a number, edit the sentence to make it shorter by removing the word at the given location index.",This is another random sentence. 7,TRUE,1
+Bird watching - give a description of a particular bird.,Red-tailed hawk,TRUE,1
+Predict the outcome when the following reactants react together.,CaCO3 + 2HCl,TRUE,1
+"Given a recipe, suggest an alternative ingredient for one of the given items.","Pecan Pie Recipe: 1/2 cup butter, 2 cups light brown sugar, 1/2 cup white corn syrup, 3 eggs, 1 teaspoon vanilla, 1/2 teaspoon salt, 1 1/2 cups chopped pecans",TRUE,1
+Create a logic puzzle about a celebrity's Paris vacation,Brad Pitt,TRUE,1
+List the three most important facts from the given text.,"Apple Inc. is an American multinational technology company that designs, develops, and sells consumer electronics, computer software, and online services. It is the world's largest information technology company by revenue and one of the world's most valuable companies.",TRUE,1
+Add a sentence to the following sentence highlighting the importance of the action.,He opened the door.,TRUE,1
+Edit the paragraph to follow formal writing standards.,Dustin and carmen are siblings. they like to hangout every saturday.,TRUE,1
+Generate a piece of code in Python that could be used to calculate the cost of a product.,price = 15; quantity = 10;,FALSE,0
+"Categorize the following sentence under one of the following topics: literature, science, political science, math.",African Americans should be afforded equal civil rights as other citizens,TRUE,1
+Re-write the sentence ensuring that it clearly communicates its meaning,The dog jumped the fence,TRUE,1
+Replace the underlined phrase in the sentence with a suitable phrase.,They had incredible excited to go on the trip.,TRUE,1
+Edit this sentence to make it logically sound: The organization whose its aim was to eliminate poverty was successful.,The organization whose its aim was to eliminate poverty was successful.,FALSE,0
+Categorize the following concepts in five buckets,"Apple, Orange, Banana, Strawberry",TRUE,1
+Analyze the following speech and give feedback,My biggest challenge is to finish my project on time.,TRUE,1
+Change the structure of this sentence,Alex is going to a party,TRUE,1
+"Rewrite this sentence in a friendly tone: ""Take the trash out.""",Take the trash out.,FALSE,0
+A customer has left the following feedback. Generate a response.,The service was terrible and I feel like my money was wasted,TRUE,1
+Where does the following information belong in a resume?,Passionate about learning and committed to personal development,TRUE,1
+"Given a product description, come up with an advertising slogan.",This electronic guitar has intuitive controls and realistic sound.,TRUE,1
+Shorten the given sentence using a contraction.,She will not go to the movies.,TRUE,1
+Count the number of syllables in the given word and output the result directly.,Protagonist,TRUE,1
+Classify the following items as either a fixed cost or a variable cost.,Rent,TRUE,1
+Find a sentence that can be used to explain why someone should not use a particular product.,Laser Hair Removal,FALSE,0
+Classify this flower according to its characteristics.,Rose,TRUE,1
+Analyze the behavior of the stock for a particular company.,Microsoft Corporation,TRUE,1
+Identify which emotion the person is feeling in the given sentence.,He was filled with delight.,TRUE,1
+Select the sentence out of the given options which best expresses the opinion about school cafeterias.,Option A: School cafeterias provide nutritious and balanced meals. Option B: I don't think school cafeterias are the best place to eat. Option C: School cafeterias are often a convenient and affordable solution.,TRUE,1
+Extract the most relevant sentence from the following article.,"Millinial shoppers are increasingly favouring ethical brands over competitors. Businesses are adapting by investing in technology to make their practices more sustainable and ethical. Therefore, sustainability is now a key factor in the marketing mix.",TRUE,1
+Write a paragraph comparing the economy of two countries,Germany and France,TRUE,1
+Pick out three relevant events from the news.,"This week, the United Nations held its first online meeting, Netflix announced its new streaming services, and the US presidential elections were postponed.",TRUE,1
+Create a table of nutritional value for the following food item.,Strawberries,TRUE,1
+"Grade the following essay, using a scale of 0-5.",The rising cost of higher education has made college increasingly out of reach for many students. More and more students are taking out loans to cover their expenses and are graduating with high amounts of student debt.,TRUE,1
+"Given this input, how would you generate a creative poem?",Magpies,TRUE,1
+"For the following company, generate a unique brand story in three sentences.",Apple,TRUE,1
+Evaluate a patient's health information and provide a diagnosis.,"Patient Name: John Doe Age: 18 Symptoms: Headache, fever, body aches",TRUE,1
+Generate a sentence which uses the given words in a creative manner.,"Lightning, Bubble",TRUE,1
+Classify the following text as 'subjective' or 'objective',The Samsung Galaxy S20 is an incredible phone.,TRUE,1
+Are these two words homophones?,"Mail, male",TRUE,1
+Evaluate a recent government policy.,The European Union's Digital Services Act.,TRUE,1
+Reorganize the items in order of importance.,"Shopping, Going to the Gym, Writing",TRUE,1
+Delete the tweet if it violates the rules.,I hate all girls who are taller than me!,TRUE,1
+Mark content with the correct tag.,This is a machine learning article.,TRUE,1
+"Using the input, explain how each color of the rainbow is created.",Rainbows,TRUE,1
+Categorize the given forum posts into relevant topics.,Post 1: I'm having trouble downloading the software Post 2: Can I get more details about the pricing structure?,TRUE,1
+Write a persuasive open letter.,To: The CEO of a major oil corporation,FALSE,0
+Redact or censor sensitive information from the given text.,"John Smith, age 35, has his credit card number - 4444 4444 4444 4444 - and address - 111 Main Street, Brooklyn, NY 11202 - printed on his driver's license.",TRUE,1
+"Take the following JSON data, and turn the output into a table.","{ ""1"": { ""Name"": ""John"", ""Age"": 20 }, ""2"": { ""Name"": ""Jane"", ""Age"": 25 }, ""3"": { ""Name"": ""Nancy"", ""Age"": 30 }, ""4"": { ""Name"": ""Alex"", ""Age"": 35 } }",TRUE,1
+Construct a short dialogue with the given information.,Characters: Nancy and John Topic: Book,TRUE,1
+Rewrite the following in a creative and interesting way.,She ran to the store.,TRUE,1
+Analyze the following sentence and find the direct object.,She wrote a book.,TRUE,1
+"You need to answer if this headline is about sports or not. ""Record Holders Excels in the Marathon""",Record Holders Excels in the Marathon,FALSE,0
+Suggest a career path,I am interested in healthcare,TRUE,1
+"Categorize the following phrase as happy, sad, or neutral.",I am feeling sick.,TRUE,1
+Evaluate the following article and provide an overall rating,"This blog post is a comprehensive exploration of the intersection between network marketing and artificial intelligence. The author provides a thorough discussion of the possible applications of AI in network marketing, looks at the legal implications surrounding its implementation, and offers insight into its potential future.",TRUE,1
+"Summarize the article ""The Benefits of Eating Organic Food.""",The Benefits of Eating Organic Food,TRUE,1
+Determine the type of angle created by stright lines AB and CD,AB is vertical and CD is horizontal,FALSE,0
+"Using Machine Learning, predict the body temperature of an animal based on given data.","Input: weight, age, environment and activity of the animal",TRUE,1
+Convert this participle phrase into an adjective,Mourning bitterly,TRUE,1
+Translate the statement below into French,Laughter is the best medicine.,TRUE,1
+Explain the context of the input,Extracurricular activities are essential for student development.,TRUE,1
+How does the protagonist feel towards the end of the book?,"Josh has been struggling to make sense of what his life has become. He has lost many of his old friends, and his future is uncertain.",TRUE,1
+"Based on the description, write a recipe for a dish.",This dish is a savoury apple crumble with a hint of cinnamon and oatmeal.,TRUE,1
+Is the sentence using a subordinating or coordinating conjunction?,She ate her dinner and went to bed.,TRUE,1
+Provide a scientific cause for the following phenomenon:,Why is the sky blue?,TRUE,1
+Calculate the total number of pages in the book.,There are 350 pages in the book.,TRUE,1
+Detect if the sentence depicts an optimistic tone or a pessimistic tone.,Markets may decline further in the coming days.,FALSE,0
+"Given the following components, build an essay discussing the benefits of renewable energy.","Wind energy, solar energy, geothermal energy",TRUE,1
+Develop an algorithm that can detect a given type of fraud.,Credit Card Fraud,FALSE,0
+Define the word in one sentence,Oblique,TRUE,1
+Create a list of configuration parameters and their default values for this specific model.,Model: Deep Learning Model,FALSE,0
+"Given a list of sounds, describe how each sound is produced.","Sounds  laughter, barking",TRUE,1
+Generate a properly formed question based on the given sentence.,She had a difficult journey.,TRUE,1
+Categorize the following text by labeling it as either opinion or fact.,Smoking is dangerous to your health.,TRUE,1
+Assign the following topics to each sentence,1. The fastest mammal on land is the cheetah. 2. Cheetahs can run up to 70 mph.,TRUE,1
+Extract the information from the input string.,The meeting is scheduled for 02/20/2021 at 12:00 pm.,TRUE,1
+Name a type of natural disaster that is common in the given location.,Mexico,TRUE,1
+Generate a hashtag for the sentence,A new era of exploration and discovery,TRUE,1
+Is this a pronoun?,My,TRUE,1
+"Rewrite the following sentence, replacing adjectives with adverbs.",The teacher quickly wrote the instructions on the board.,TRUE,1
+Reorder the given sentence to create a sentence with a structure ending with a gerund.,The team brainstormed solutions for the problem.,TRUE,1
+Provide a conclusion based on the given context.,"After extensive research, it is clear that climate change is caused by an increase of carbon dioxide in the atmosphere.",TRUE,1
+Simplify the given sentence.,The fact that I can't think of anything to write is making me feel frustrated.,TRUE,1
+Rewrite the paragraph in reverse order,AI has changed the way that many of us view the world. It has allowed us to visualize and understand data in ways we hadnt thought possible before. This opens up a whole new world of possibilities.,TRUE,1
+Determine if the following sentence contains any modal verb.,I can recommend the best restaurant in town.,TRUE,1
+"Given the following statements, compose them into a complete argument and provide a conclusion.",Statement 1: Global warming is a serious problem. Statement 2: It requires urgent action from governments and corporations.,TRUE,1
+Rating predictions: Predict the rating of a review with the text,"Text: ""The food was amazing. Highly recommend!""",TRUE,1
+Create an algorithm that divides a given array of numbers into two sets such that the sum of the elements in each set is the same.,"[5, 10, 15, 20]",FALSE,0
+Describe how to use a statistical tool,A statistical tool such as SPSS,FALSE,0
+"Rewrite the following sentence to put emphasis on the word ""happiness"".",My family's biggest priority is happiness and joy,TRUE,1
+Analyze similarities and differences between two arguments.,Argument A: We should tax the wealthy to help fund social programs. Argument B: All citizens should pay the same amount in taxes regardless of their income.,TRUE,1
+Transform the following sentence into one using a different verb.,She saw the bird.,TRUE,1
+Find the error in the given code snippet and suggest a solution.,def countdown(x):\n while x >= 0:\n print(x)\n x = x - 1\ncountdown(5)\ncountduwn(3),TRUE,1
+Create a paragraph based on these facts.,"The maximum speed of a Cheetah is 120 km/h, which is greater than the maximum speed of a Greyhound, which is 75km/h.",TRUE,1
+Generate a product review with the following information,Product: Headphones Rating: 4.5/5,TRUE,1
+Rewrite the news headline in a way that captures the reader's attention.,New Study Proves Organic Foods are Nutritionally Superior,TRUE,1
+Create a plan for introducing a new technology,The new technology is a robotic assistant that helps with customer service and retail operations.,FALSE,0
+Describe how the given character changed in the given story.,Character: Harry Potter Story: Harry Potter and the Sorcerer's Stone,TRUE,1
+Consider a medical scenario and outline possible treatment choices.,A patient comes in with a broken bone in their arm.,TRUE,1
+Generate three recipe ideas for a given cuisine.,Latin American Cuisine,TRUE,1
+Recommend a book related to the given theme.,Exploring the unknown,TRUE,1
+Construct a semantic network,Fire,TRUE,1
+"Given three words, write a simile.","Bird, cloud, sky",TRUE,1
+Track the change in stock prices for the following company,Google,TRUE,1
+Add three more convincing points to the following argument.,"Humans should not eat meat because it is not good for their health, it is filled with preservatives, and inappropriate animal treatment.",TRUE,1
+Generate an output sentence that is similar to the following input sentence.,The roaring laughter of the children filled the room.,TRUE,1
+Determine if the given sentence is passive or active.,The cat was chased by the dog.,TRUE,1
+"In the sentence below, identify the words that are used as modifiers.",She drove her green car quickly.,TRUE,1
+Create a new password using the provided criteria.,"Must contain at least 8 characters and include one upper-case letter, one lower-case letter, and one number.",TRUE,1
+Automatically delete all duplicated lines from a text document.,"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque elementum est quis consectetur adipiscing. Donec tempor, leo et interdum pulvinar, odio sapien hendrerit neque, ut mattis sapien eros et sem. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",TRUE,1
+Analyze the given text and list the five main characters.,"Once upon a time, there was a brave prince who set out to find the lost kingdom. Along his journey, he encountered a wise wizard, a sly fox, and a kindly old merchant.",TRUE,1
+Sort the list of fruits according to their color.,"Banana, Grape, Apple",TRUE,1
+Update the given travel itinerary to reflect the new details.,Day 1: Flight from London to New York at 12 pm Day 2: Visit the National Museum of Natural History in Washington DC Day 3: Flight from New York to San Francisco at 3 pm,TRUE,1
+"Detect if the sentence contains any similar words. If yes, indicate these words.",The answer to the question is right.,TRUE,1
+What could this sign represent?,![Image of a white octagon with a blue border](./media/example2.png),TRUE,1
+Identify the language of this text.,Es una buena idea,TRUE,1
+Summarize the story by providing an overview of the main events.,"The Jungle Book is a 1967 American animated musical comedy film produced by Walt Disney Productions. It is loosely based on the 1894 collection of stories of the same name by Rudyard Kipling, and animated by Tommy Johnson, Irv Spence and Wolfgang Reitherman. It is the 19th animated feature in the Disney Animated Canon and follows the adventures of a live-action boy, Mowgli, who is trained by Bagheera the black panther and Baloo the bear.",TRUE,1
+Propose components for a customized AI solution.,Solution: AI-Powered Image Recognition System,FALSE,0
+"Given a set of instructions, come up with a list of supplies needed to complete the instructions.",Build a model car.,TRUE,1
+Rewrite the following paragraph in simpler language,We pledge that the operations personnel will be responsible for the execution of the prescribed protocols in order to maintain the expected service level agreements.,TRUE,1
+Give a brief explanation about a given topic.,History of the internet,TRUE,1
+Associate a hashtag to this tweet.,I got a new job!,TRUE,1
+Select an appropriate conclusion for this short story.,"Once upon a time, there was a brave little rabbit named Wilbur. He had been living in the forest for some time, and he was tired of living all alone. All of the other forest animals were friendly to him, but he wanted to find someone who he could really connect with and be best friends with. Wilbur decided he would set out on a big journey to find just the right friend.",TRUE,1
+Which of the following is not a feature of a national park:,a) Restricted access b) Built structures c) Waterfalls d) Fishing,TRUE,1
+"Multiply the following matrices ( [1,2], [3,4] ) and [ 5,6] [7,8]","[[1,2], [3,4]], [[5,6], [7,8]]",FALSE,0
+Convert the following text to camel case. Output the answer directly.,quick_brown_fox,TRUE,1
+"Given a list of facts about a topic, generate a single statement that captures one of the facts as to why it is important.",- Humans have 23 pairs of chromosomes - Chromosomes are present in nearly all living cells,TRUE,1
+"Classify the following sentence as either sarcastic, literal, or subtle.",I'm so excited for the amazing weather we're having!,TRUE,1
+How could this be used in a positive way?,Cell phones can be distracting.,TRUE,1
+Rewrite the given sentence to emphasize a particular word.,I always forget to buy milk.,TRUE,1
+How might the following information be used to solicit a potential customer?,Sales performance of a new product,TRUE,1
+List some ways the given country is unique.,Japan,TRUE,1
+Find a product that is perfect for a mother's day.,The mother is an experienced traveler.,TRUE,1
+Rewrite the sentence to emphasize the importance of saving money,I should save money.,TRUE,1
+Create a three line song about the following topic.,Spring,TRUE,1
+"Identify the category of the given text. Output ""Fiction"" or ""Non-fiction"".",Charles Darwin's On the Origin of Species,TRUE,1
+Describe a scene from a movie.,The Shawshank Redemption,TRUE,1
+"Given a list of items, suggest an interesting activity.","pencils, paper, markers",TRUE,1
+How can the following sentence be made more concise?,This hat is both stylish and functional.,TRUE,1
+Compose a tweet given the author and content.,Author: John Content: The world needs more kindness,TRUE,1
+Make a reasonable assumption to fill the given prompt.,The year is 2100 and _______,TRUE,1
+Classify the given song into a genre.,"#Dreams by Fleetwood Mac Oh, yeah All the dreams we've had are lost",TRUE,1
+"Given this description, classify the story as a tragedy or a comedy.","It tells the story of a young man whose ambition gets the better of him, ultimately leading to his downfall",TRUE,1
+Change the verb tense of the sentence to simple past.,I am studying at the library.,TRUE,1
+Rewrite the following passage in a more condensed form.,"E-commerce is the buying and selling of goods and services using the internet. It is a major component of the modern economy and its effects have been accelerated due to the development of digital technologies. It has made transacting easier and more efficient, allowing for more competitive prices due to reduced personnel costs and lower overhead expenses.",TRUE,1
+Detect if following sentence contains alliteration.,The slippery snake slithered slyly.,TRUE,1
+Write an introduction to this tweet,"""A reminder to always stay humble!""",TRUE,1
+"Using Python, create a program that can predict the language of a given text.",This is a sentence in French,TRUE,1
+"Given an example, generate an algorithm for sorting it.","[3, 9, 5, 4, 7]",TRUE,1
+Find a clever pun related to this movie title.,The Godfather,TRUE,1
+Annotate the text by categorizing it into the five senses.,"I cant wait to taste the warm, fruity muffin I just made.",TRUE,1
+Pick the most expensive item from this list,"Toyota Corolla, Gucci Jacket, Dior Sunglasses",TRUE,1
+Group the objects into two categories.,"Ball, shoe, pen, flower",TRUE,1
+"The forgotten leftovers had gotten quite old, he found it covered in mold in the back of his what? Think about this step-by-step.",A. Carpet B. Fridge C. Book D. Computer,TRUE,1
+Which type of clause best describes the following sentence?,She wanted to see the movie.,TRUE,1
+Generate a descriptive paragraph about a given stone.,This is a white quartz that glistens in the light.,TRUE,1
+"Given a piece of code, explain it",for i in range(10): print('Hello World!'),TRUE,1
+Generate a new sentence that follows the same structure of the sentence below.,The clouds were moving swiftly across the sky.,TRUE,1
+Edit the following phrase and make it sound formal.,I wanted to know why he wasn't here,TRUE,1
+Classify this text as Fiction or Non-fiction.,The universe is estimated to be around 13.8 billion years old.,TRUE,1
+Demonstrate the use of the given phrase in a sentence.,"""In the nick of time""",TRUE,1
+Tell me what country this flag belongs to.,[flag.jpg],TRUE,1
+Write a scientific paper given a title and an abstract.,"Title: Exploring the Effects of Climate Change on Marine Ecosystems Abstract: This paper explores the effects of climate change on the health and stability of marine ecosystems, with a focus on how the shifting temperatures influence species migration, the growth and decline of certain species, and food web relations.",TRUE,1
+Suggest the possible side dishes for a given main dish.,Meatloaf,TRUE,1
+Analyze the given words in terms of parts of speech.,Spider,TRUE,1
+Rewrite the sentence with better lexical choice and verb tense.,He had went to the store.,TRUE,1
+Trade in the words in this sentence for related words without changing its meaning.,He enlisted the help of his brother,FALSE,0
+Improve this sentence to make it more powerful and persuasive.,The new product features are really useful.,TRUE,1
+Edit the sentence to indicate uncertainty.,I am sure she will come to the party.,TRUE,1
+Describe a place you have visited in under 100 words.,The Grand Canyon,FALSE,0
+Complete the following sentence by filling in the <mask>,I wanted to throw a party but the <mask> became an obstacle.,TRUE,1
+Provide multiple solutions for the given ethical dilemma.,"The CEO of a company receives an illegal kickback from a contractor, but at the same time the contractor delivers a product that meets all of the company's criteria",TRUE,1
+Add an emotionally charged word to the sentence.,He completed the task in 20 minutes.,TRUE,1
+Analyze the production costs of a movie.,100 million dollars,TRUE,1
+"Given the following phrase, generate a list of synonyms",Create something,TRUE,1
+Compose a tweet about this product and its features.,"This product is made with natural ingredients, is easy to use, and has been proven to deliver visible results.",TRUE,1
+Edit this sentence using the Chicago Manual of Style:,The scientists have studyed the data,TRUE,1
+Write a dialog between two characters in a scene.,"Characters: Joe, Alex",FALSE,0
+Determine the function of this sentence in the given text.,"Also, studies have documented increased patient satisfaction.",TRUE,1
+Create a new sentence based on the following words:,"moved, step, new",TRUE,1
+Describe how machine learning is used in this system.,A system that recognizes hand-written digits.,FALSE,0
+Write a summary of the following paragraph in one sentence.,"The creature appeared small and harmless at first, but with its sudden movements, it quickly became clear that it was not to be trusted.",TRUE,1
+Insert a comma into this sentence.,The girl put on a pink dress,TRUE,1
+"Assign one of the following labels to the given news article: Positive, Neutral, or Negative.",The economy of China has seen a sharp decline in recent months due to the coronavirus pandemic.,TRUE,1
+Calculate the area of a square given its length in cm.,12 cm,TRUE,1
+Evaluate the effectiveness of a story-telling technique.,The author used vivid imagery and dialogue to create an engaging story.,TRUE,1
+Change the following sentence to be in the imperative mood.,We must clean the room.,TRUE,1
+Determine the percentage decrease between the two quantities.,37 and 24,TRUE,1
+Describe the place of origin of this cuisine.,Spanish Paella,TRUE,1
+Find the nearest restaurant from a given address.,"715 Church Street, Evanston, IL 60201",TRUE,1
+Correct any spelling or grammar mistakes in the given sentence.,She jogged excersies around the lake.,TRUE,1
+Rearrange the sentence to make it a valid sentence in English.,apples three basket a in,TRUE,1
+Convert the adjectives in the given sentence into nouns.,The car was fast and luxurious.,TRUE,1
+Rewrite this sentence according to the given style,Style: Formal Sentence: I don't think this plan is gonna work,TRUE,1
+"Given a product description, classify it into one of the following categories: vehicle, clothing, electronics.",A red mountain bike,TRUE,1
+Rewrite the following paragraph to make it easier to understand for a younger audience.,"Momentum is quantified as the product of the mass and the velocity of an object. It is a vector quantity with both magnitude and direction. When two objects collide, their total momentum remains constant, provided there are no external unbalanced forces acting upon them. This concept, known as conservation of momentum, is a fundamental principle in physics.",TRUE,1
+Name a famous book written by the given author.,J.K. Rowling,TRUE,1
+Design the following Disney park,"An underwater themed park, complete with rides and attractions",TRUE,1
+Make a prediction on what the company's stock will close at today.,Ticker: MSFT,TRUE,1
+Describe the user's favorite animal in 3 sentences,Tiger,TRUE,1
+"Look at the following article, what kind of climate does it mention?",An article about the Amazon Rainforest,TRUE,1
+Make a plan for picking up a customer.,The customer is located at 123 Main Street,TRUE,1
+"Classify this tweet as either ""positive"" or ""negative"".",The government just passed an amnesty bill for immigrants seeking permanent residency.,TRUE,1
+Generate an alternative sentence given the example sentence.,Example sentence: I loved going to the park,TRUE,1
+Make a comparison of two items.,Sports car and electric vehicle.,TRUE,1
+Name five common ingredients used in French cuisine.,,FALSE,1
+Construct a story that combines elements of fantasy and reality.,,FALSE,1
+Provide a statistic about global warming.,,TRUE,0
+Create a mobile app wireframe of a simple quiz game.,,FALSE,1
+What is 88  (4  2)?,,FALSE,1
+Describe the concept of augmented reality and its use in modern society.,,FALSE,1
+Simplify sqrt(288).,,FALSE,1
+List the seven principles of Kwanzaa.,,FALSE,1
+Design a categorization scheme for the different types of animals.,,FALSE,1
+Describe the basic principles of thermodynamics.,,FALSE,1
+Identify some common mistakes made by novice writers.,,FALSE,1
+Choose three places you would like to visit and explain why.,,FALSE,1
+What color is a pure red light?,,FALSE,1
+Describe a coffee cup in five adjectives.,,FALSE,1
+Give 5 benefits of meditation.,,FALSE,1
+What is the difference between latent semantic analysis and topic modeling?,,FALSE,1
+Suggest 3 ways to reduce a companys carbon footprint.,,FALSE,1
+List the names of three popular sports.,,FALSE,1
+Create a poem based on the concept of regret and love.,,FALSE,1
+Name three characteristics of an ideal employee.,,FALSE,1
+Name two factors that contribute to decision-making.,,FALSE,1
+Identify a type of physical activity that can be done indoors.,,FALSE,1
+Describe how social media has changed society.,,FALSE,1
+Generate five examples of proper breakfast food.,,FALSE,1
+Suggest a solution for dealing with a computer virus.,,FALSE,1
+Create a paragraph of 10-15 sentences describing a sunny summer day.,,FALSE,1
+Create a simile that compares a sunrise to something else.,,FALSE,1
+List three activities for children during a hike.,,FALSE,1
+Describe the process for making a PB&J sandwich.,,FALSE,1
+Write a headline for an article about the benefits of using AI in the finance sector.,,FALSE,1
+List five benefits of using online banking services.,,FALSE,1
+Create a GAN model to generate a portrait,,FALSE,1
+Generate a sentence that expresses optimism.,,FALSE,1
+Compute the factorial of 10.,,FALSE,1
+Name one application of Machine Learning,,FALSE,1
+Suggest a few ways to improve customer service.,,FALSE,1
+Create a poem with 4 lines that portrays the beauty of sunsets.,,FALSE,1
+List three techniques used to influence consumers to purchase products.,,FALSE,1
+What is the difference between Responsive Design and Adaptive Design for webpages?,,FALSE,1
+"Classify the following sentence: ""She will be late to the party""",,FALSE,1
+What is the name of the method used to approach problems in engineering?,,FALSE,1
+Describe a trait that would make a person successful in the finance industry.,,FALSE,1
+"Take this sentence and correct any errors: ""The dog barked loudly then ran away""",,FALSE,1
+Give some advice for speaking in public.,,FALSE,1
+Generate a list of possible job titles for a software developer.,,FALSE,1
+Discuss the consequences of introducing AI into the workforce.,,FALSE,1
+Find three facts about the Civil Rights movement in the United States.,,TRUE,0
+Make a list of 10 fruits.,,FALSE,1
+Generate a headline for a news article about China halting construction of a new dam in the Yangtze River.,,TRUE,0
+Write a short story about a scarecrow who comes alive,,FALSE,1
+"Identify which type of sentence this is: ""See the light at the end of the tunnel"".",,FALSE,1
+What is the relationship between energy and the law of conservation of energy?,,FALSE,1
+Describe the concept of natural language processing.,,FALSE,1
+What is URL shortening?,,FALSE,1
+Explain how plants respire,,FALSE,1
+Name two cities in Canada,,FALSE,1
+Compare a cat and a dog.,,FALSE,1
+Suggest a 3-step approach for interviewing a prospective employee.,,FALSE,1
+Rearrange the following sentence to make it grammatically correct: eat likes vegetables my cat,,FALSE,1
+Write a father's day wish for a son.,,FALSE,1
+Provide a set of instructions for playing a game of checkers.,,FALSE,1
+Generate a fact about the inside of the sun,,FALSE,1
+Explain why wooden structures are used in construction,,FALSE,1
+Are Seattle and Vancouver closer to one another than Boston and New York?,,TRUE,0
+"Explain the concept of ""fake news"" in a short overview.",,FALSE,1
+Generate an example of a professional email that is requesting feedback.,,FALSE,1
+"Edit the following sentence for better grammar: ""What is colour the sky.""",,FALSE,1
+Describe a Renaissance painting in detail.,,TRUE,0
+Describe three types of cybercrime.,,FALSE,1
+"A farmer has 5 cows and 10 chickens. If each cow needs 20 liters of water per day and each chicken needs 1 liter, how many liters of water will the farmer need in a day?",,FALSE,1
+Generate an appropriate pick up line,,FALSE,1
+Create a recipe for a healthy breakfast includig the ingredients and cooking directions.,,FALSE,1
+"Find the definition of ""proof of concept"".",,TRUE,0
+Tell me one way to improve the ecological footprint of your lifestyle.,,FALSE,1
+Propose a solution for reducing plastic waste in the environment.,,FALSE,1
+Create ten multiple-choice questions about the topic of history.,,FALSE,1
+Name the largest ocean on Earth.,,FALSE,1
+Generate a creative metaphor for describing a sunset.,,FALSE,1
+Name three computer programs which can be used to create 3D models.,,FALSE,1
+Give me an example of a group of non-human animals that are capable of learning social behaviors.,,FALSE,1
+What is the main difference between a search engine and a web browser?,,FALSE,1
+Develop guidelines for finding reliable online sources.,,FALSE,1
+Write a question asking for a customer's first name.,,FALSE,1
+Find three interesting facts about kiwi fruit.,,FALSE,1
+"Analyze the sentence ""ignorance is bliss""",,FALSE,1
+Construct an equation that expresses the following statement: x is twice the value of y.,,FALSE,1
+"Write instructions for how to play Rock, Paper, Scissors",,FALSE,1
+Highlight two strategies that can be used to make your bot's conversations more natural.,,FALSE,1
+Make a list of three often forgotten tasks for a party.,,FALSE,1
+Identify two jobs require use of a laptop computer.,,FALSE,1
+Generate a list of potential keywords related to the topic of digital currency.,,FALSE,1
+What functions does a search engine offer?,,FALSE,1
+Provide an example of how to be a better listener.,,FALSE,1
+Create a birthday wish for someone who loves animals.,,FALSE,1
+What is the appropriate tip after having a meal in a restaurant?,,FALSE,1
+What is the rhyme scheme of a sonnet?,,FALSE,1
+Explain the concept of information retrieval.,,FALSE,1
+Provide three facts about Poland.,,TRUE,0
+Construct a function to find the area of a rectangle.,,FALSE,1
+Outline the unique elements of a rock garden.,,FALSE,1
+Generate a story about a girl who is lost in a desert.,,FALSE,1
+"A large rectangle has side lengths of (x+7) and (x+5). In the large rectangle, there is a rectangular hole with side lengths of (2x-3) and (x-2). What is the area of the large rectangle (not including the area of the hole)? Express your answer as a polynomial in x.",,FALSE,1
+Describe the economic impact of World War II.,,TRUE,0
+Explain how neural networks can be used to predict stock prices.,,FALSE,1
+Make a list of five precautions for travelling during the COVID-19 pandemic.,,FALSE,1
+How is a blockchain different from a database?,,FALSE,1
+Summarize the best practices for effective communication.,,FALSE,1
+Summarize what the Periodic Table of Elements is.,,FALSE,1
+Name two autoimmune diseases.,,FALSE,1
+What is the role of the nervous system in the human body?,,FALSE,1
+"Write a short story that takes place in the city of Paris, France.",,FALSE,1
+Find the zeros of the function: 2x^3 - 4x + 2.,,FALSE,1
+Explain why the global population is still growing despite the threat of overpopulation.,,FALSE,1
+Rewrite this sentence to reflect a more formal tone: Shes really cool,,FALSE,1
+List five vegetables that are orange in color.,,FALSE,1
+Create an analogy that explains the concept of data mining.,,FALSE,1
+Generate a sentence that describes how you would use the following machine learning technique: Naive Bayes Classifier.,,FALSE,1
+In what ways do humans affect the environment?,,FALSE,1
+Generate a fortune telling prediction.,,FALSE,1
+Design a data structure for a to-do list.,,FALSE,1
+What would happen if the Earth's rotation were to suddenly stop?,,FALSE,1
+Generate 2 ideas with 3 details each on how to improve the classroom environment,,FALSE,1
+Compare and contrast the two types of philosophical ethics - deontological and utilitarian.,,FALSE,1
+"What is the meaning of the proverb ""look before you leap""?",,FALSE,1
+Suggest three central ideas that could be the basis of a novel.,,FALSE,1
+Find the synonym of 'unrelenting':,,FALSE,1
+Can you name some popular shows airing this season?,,TRUE,0
+What school of thought do pragmatists belong to?,,FALSE,1
+"Rewrite this sentence without changing the meaning: ""Online learning has been proven to be an efficient way of getting an education.""",,FALSE,1
+Generate a 100-word statement about the potential consequences of reduced global emissions.,,FALSE,1
+"Change the verb tense of this sentence to the Future Perfect tense: ""He will finish his homework.""",,FALSE,1
+Describe a future technology for the betterment of society.,,FALSE,1
+Suggest a new name for a startup company specialized in pet food.,,FALSE,1
+Summarize the details of currency exchange.,,TRUE,0
+Describe a summer day in Istanbul.,,FALSE,1
+Explain how air resistance affects the motion of a falling object.,,FALSE,1
+Compare and contrast the philosophy of Socrates and Plato.,,FALSE,1
+"Generate 3 alternate titles for the novel ""To Kill A Mockingbird"".",,FALSE,1
+Identify the two most important aspects of a successful startup.,,FALSE,1
+What are the three steps for setting goals?,,FALSE,1
+What is the general public opinion of Tesla's electric cars?,,TRUE,0
+Create a new title and opening sentence for the following story: Thor was a brave warrior who lived in an ancient era and belonged to a formidable tribe.,,FALSE,1
+Write a C code to evaluate a quadratic equation.,,FALSE,1
+"Rewrite the sentence ""She worked hard"" to imply the opposite",,FALSE,1
+Generate a headline for a news article about President Trump's policies on global warming.,,TRUE,0
+Name one direct consequence of global warming.,,FALSE,1
+Write a ten-word sentence using only present tense verb forms.,,FALSE,1
+What are the parts of a book?,,FALSE,1
+Write a haiku about being happy.,,FALSE,1
+Write two original limericks.,,FALSE,1
+Who is the main antagonist in the movie Jurassic Park?,,FALSE,1
+Generate an article about the current political situation in India.,,TRUE,0
+Write the rules for a card game.,,FALSE,1
+Give me a list of all the tables and chairs in a typical office.,,FALSE,1
+Give three examples of customer feedback from your customer service experience.,,TRUE,0
+Write a description of a forest at night.,,FALSE,1
+Generate a list of at least five tips to recycle more.,,FALSE,1
+Calculate the perimeter of an equilateral triangle with side lengths of 5,,FALSE,1
+Generate a headline that confirms recent trends in e-commerce.,,TRUE,0
+Name two characters in the novel Moby Dick.,,TRUE,0
+"Given any type of data, explain the concept of normalization.",,TRUE,0
+What are the similarities between Hinduism and Buddhism?,,FALSE,1
+"Imagine you are talking to a child, explain the concept of DNA.",,FALSE,1
+"In one sentence, explain how a monostable multivibrator works",,FALSE,1
+Propose a solution to increase public transportation ridership.,,FALSE,1
+How recycling affects the environment?,,FALSE,1
+Generate a rap verse containing the words fire and wave.,,FALSE,1
+"If x + sqrt(x^2 - 1) + 1/(x - sqrt(x^2 - 1)) = 20, then find x^2 + sqrt(x^4 - 1) + 1/(x^2 + sqrt(x^4 - 1)).",,FALSE,1
+Output a phrase to express agreement with the following opinion: teachers are important members of society.,,FALSE,1
+"Generate a story combining the following words: lemon, whale, and butterfly.",,FALSE,1
+Generate a sample password,,FALSE,1
+Generate a short poem to express gratitude.,,FALSE,1
+Generate the list of hardware components for a gaming computer.,,FALSE,1
+Generate a list of words that are related to the term 'food'.,,FALSE,1
+"Generate a metaphor that captures the essence of the phrase ""inevitable change"".",,FALSE,1
+Reverse engineer this program to understand how it works.,,TRUE,0
+How do you calculate the surface area of a cube?,,FALSE,1
+Outline three challenges posed by autonomous vehicles,,FALSE,1
+Compose a story of 200 words.,,FALSE,1
+Say something original in the following context: You just finished a job interview and you want to show the employer your enthusiasm for the position.,,FALSE,1
+Identify an example of a basic economic principle,,FALSE,1
+"Humans are animals. The term ""animals"" is sometimes used to mean all animals (including humans) and is sometimes used to mean every animal except for humans. Is there a word that means non-human animals?",,FALSE,1
+Suggest a popular song released in the last 5 years.,,FALSE,1
+How should an HR department carry out recruitment process during COVID pandemic?,,FALSE,1
+"Transform the following phrase into a negative statement: ""I will go"".",,FALSE,1
+What is the difference between a web server and an application server?,,FALSE,1
+Create a musical piece with a mood of mystery,,FALSE,1
+Create a program to convert text to speech.,,FALSE,1
+Describe the process of making peanut butter.,,FALSE,1
+Provide an outline to write a research paper about AI in healthcare.,,FALSE,1
+Calculate the cost of a product if the original price is $125 and the discount is 15%.,,FALSE,1
+Write a creative description for a magical ability.,,FALSE,1
+"Determine the next two numbers in the following sequence: 4, 8, 12, 16",,FALSE,1
+"Add a comma to the following sentence: ""The man went to the store to buy food for his family",,FALSE,1
+What event occurred in the US in 1910?,,TRUE,0
+Generate a dialogue between two characters discussing the impact of technology on society.,,FALSE,1
+How would you be monitoring and evaluating the performance of a GPT model?,,FALSE,1
+What are three advantages of using a GPT language model?,,FALSE,1
+Generate an algorithm for counting the number of different languages spoken within a country.,,FALSE,1
+Compose a poem of five lines in haiku format on the theme of nature.,,FALSE,1
+Name the world's highest mountain peak.,,FALSE,1
+Describe the differences between an independent contractor and an employee.,,FALSE,1
+What could be the economic effect of a proposal to raise minimum wage?,,FALSE,1
+"Describe what a ""smart device"" is.",,FALSE,1
+Develop a program to measure the length of a text,,TRUE,0
+Write a story using the words 'galaxy' and 'journey'.,,FALSE,1
+Explain the concept of genetic drift to a layperson.,,FALSE,1
+Make a list of three ways to calm down when feeling anxious.,,FALSE,1
+Describe the ideal primary school classroom environment,,FALSE,1
+Design a board game involving the theme of history.,,FALSE,1
+Describe how technology has changed over the last decade.,,FALSE,1
+Generate an interesting fact about the behavior of a physical system.,,FALSE,1
+Name a famous leader who was a strong advocate of gender equality.,,FALSE,1
+Name three popular modern technologies.,,FALSE,1
+Summarize the advantages of online learning.,,FALSE,1
+Tell me the first celebrity to win the Nobel Peace Prize.,,TRUE,0
+Construct a sentence to explain why a person should learn a second language.,,FALSE,1
+Compare and contrast the concepts of need and want.,,FALSE,1
+List four differences between ducks and pigeons,,FALSE,1
+Name three pieces of technology that were invented in the last decade.,,FALSE,1
+How can a GPT language model help with natural language understanding?,,FALSE,1
+"Translate the sentence ""People need love"" to Spanish",,FALSE,1
+"Insert the correct article before the word ""children""",,TRUE,0
+Give me an example of a stochastic gradient descent algorithm.,,FALSE,1
+Find a list of the top 5 most visited tourist attractions in Spain,,TRUE,0
+What are the Catalan numbers?,,FALSE,1
+Name three advantages of using machine learning for natural language processing.,,FALSE,1
+Name three popular search engines,,FALSE,1
+"Write an apt email in 150 words, thanking your current boss for providing you an opportunity for growth.",,FALSE,1
+"Format the following sentence: ""The store opens at nine tomorrow""",,FALSE,1
+Identify the most populous country in the world.,,TRUE,0
+"Give an example of how ""innovation"" has contributed to the development of technology",,FALSE,1
+Make a list of good sources for researching a topic,,FALSE,1
+Give me practical tips on how to save money.,,FALSE,1
+Create an imaginary story about a person visiting a new city.,,FALSE,1
+What types of visual elements should you include when designing a logo?,,FALSE,1
+Give three examples of how machine learning can be applied.,,FALSE,1
+Generate two possible titles for a story about a robot who plans to rule the world.,,FALSE,1
+Find the sum of the two consecutive integers that are 11 apart.,,FALSE,1
+Generate an excerpt about a summer in Paris,,FALSE,1
+Create a data set of 10 cities and the corresponding population.,,FALSE,1
+Compose an email to your boss about the status of your project.,,FALSE,1
+How does air pressure affect the environment?,,FALSE,1
+Explain the importance of tracking customer data,,FALSE,1
+"Generate questions to the statement: ""A driving license is a legal document"".",,FALSE,1
+"Generate a proverb that contains the words ""bee"" and ""honey""",,FALSE,1
+Create a list of the 8 planets in our Solar System in order from the closest to the Sun to the farthest,,FALSE,1
+Draft a short speech about the benefits of artificial intelligence.,,FALSE,1
+Create a short story with a twist,,FALSE,1
+What new processes could a company introduce to reduce their carbon footprint?,,FALSE,1
+,,,
+AVERAGE,,,0.906

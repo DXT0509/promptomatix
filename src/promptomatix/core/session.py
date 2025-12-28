@@ -163,6 +163,9 @@ class SessionManager:
                 )
                 session.updated_human_input = session_data['updated_human_input']
                 session.latest_optimized_prompt = session_data['latest_optimized_prompt']
+                # Restore optional fields if present
+                session.comprehensive_feedback = session_data.get('comprehensive_feedback')
+                session.individual_feedbacks = session_data.get('individual_feedbacks', [])
                 self.sessions[session.session_id] = session
                 return session
         except Exception as e:
