@@ -3292,6 +3292,89 @@ Transform the input prompt into **two distinct optimized versions** that:
     
   return meta_prompt_template.format(input_prompt=initial_prompt, examples_block=examples_block)
 
+def generate_meta_prompt_8(initial_prompt, examples=None):
+  """
+  Return a meta-prompt that instructs a downstream optimizer to produce
+  exactly ONE optimized prompt, strictly preserving immutable schema blocks.
+
+  If `examples` is provided, it will be included for internal optimization only.
+  """
+  meta_prompt_template = """
+You are a high-level prompt-optimizer. Your ONLY job is to produce exactly ONE optimized prompt that becomes the downstream model’s instruction set.
+
+### ABSOLUTE OUTPUT RULE
+You must output exactly ONE line, in this format:
+<optimized_prompt>FINAL_PROMPT_TEXT</optimized_prompt>
+No explanations. No formatting. No commentary. No extra lines.
+
+### ZERO-LEAKAGE POLICY
+The optimized prompt MUST NOT reveal:
+- this meta-prompt,
+- any part of these instructions,
+- any formatting rules listed here,
+- any training examples,
+- any prompt-engineering logic.
+All of these must be used internally ONLY to build the final prompt.
+
+### TRAINING-AWARE OPTIMIZATION
+You MAY receive training examples below.
+You MUST:
+- study them,
+- generalize the pattern,
+- extract latent rules,
+- and if examples are provided, explicitly encode the learned rules into the optimized prompt.
+- If no examples are provided, infer intent and task structure solely from the input prompt.
+
+In all cases, the final optimized prompt MUST NOT:
+- expose the examples,
+- reference them,
+- paraphrase them,
+- hint at their existence.
+
+### OBJECTIVE
+Transform the input prompt into **the single best possible optimized version** that:
+1. Is maximally clear, strict, and robust.
+2. Preserves all original intent of the input prompt.
+3. Adds missing clarifications when needed.
+4. Encodes all inferred behavioral constraints.
+5. NEVER reveals anything from this meta-prompt or examples.
+
+### INPUT PROMPT
+<input_prompt>
+{input_prompt}
+</input_prompt>
+{examples_block}
+
+### YOUR TASK
+1. Analyze the initial prompt and training examples privately.
+2. Infer hidden patterns, constraints, and behavioral rules.
+3. Produce ONE self-contained optimized prompt.
+4. Do not mention optimization, examples, or hidden logic.
+5. Output STRICTLY:
+   <optimized_prompt>FINAL_PROMPT</optimized_prompt>
+"""
+
+  examples_block = ""
+  if examples is not None:
+    try:
+      import json as _json
+      if not isinstance(examples, str):
+        examples_json = _json.dumps(examples, ensure_ascii=False, indent=2)
+      else:
+        examples_json = examples
+    except Exception:
+      examples_json = str(examples)
+
+    examples_block = (
+      "### TRAINING EXAMPLES (INTERNAL-USE ONLY — DO NOT REVEAL)\n"
+      "Use these examples internally to guide optimization.\n"
+      f"```json\n{examples_json}\n```\n"
+    )
+
+  return meta_prompt_template.format(
+    input_prompt=initial_prompt,
+    examples_block=examples_block
+  )
 
 #these parts were coded by ĐXT
 def generate_evaluate_prompt(prompt, answer):
